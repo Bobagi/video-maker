@@ -1,8 +1,12 @@
 import os
 from dotenv import load_dotenv
 from moviepy.editor import *
+import moviepy.config as mpy_config
 
 load_dotenv()
+
+# Defina o caminho completo para o magick.exe
+mpy_config.IMAGEMAGICK_BINARY = os.getenv('IMAGEMAGICK_PATH')
 
 def criar_video(download_dir, output_file="top5_video.mp4"):
     clips = []
@@ -22,6 +26,13 @@ def criar_video(download_dir, output_file="top5_video.mp4"):
                 pos="center"
             )
             
+            # Adicionar texto (título do item)
+            txt_clip = TextClip(f"Top {i}: Cachoeira {i}", fontsize=50, color='white', font="Arial-Bold")
+            txt_clip = txt_clip.set_position("center").set_duration(2)  # 2 segundos de duração para o texto
+
+            # Sobrepor o texto sobre a imagem
+            imagem_clip = CompositeVideoClip([imagem_clip, txt_clip])
+            
             imagem_clip = imagem_clip.set_fps(24)
             clips.append(imagem_clip)
 
@@ -35,6 +46,13 @@ def criar_video(download_dir, output_file="top5_video.mp4"):
             video_clip = video_clip.resize(height=screen_height)
             video_clip = video_clip.crop(width=screen_width, height=screen_height, x_center=video_clip.w/2, y_center=video_clip.h/2)
 
+            # Adicionar texto no vídeo
+            txt_clip = TextClip(f"Top {i}: Cachoeira {i}", fontsize=50, color='white', font="Arial-Bold")
+            txt_clip = txt_clip.set_position("center").set_duration(2)  # 2 segundos de duração para o texto
+
+            # Sobrepor o texto sobre o vídeo
+            video_clip = CompositeVideoClip([video_clip, txt_clip])
+            
             clips.append(video_clip)
             
     if clips == []:
@@ -43,6 +61,12 @@ def criar_video(download_dir, output_file="top5_video.mp4"):
 
     # Concatenar todos os clipes
     final_clip = concatenate_videoclips(clips, method="compose")
+    
+    # if music is not None:
+    #     audio_clip = AudioFileClip(music)
+        
+    #     final_audio = audio_clip.subclip(0, final_clip.duration)
+    #     final_clip = final_clip.set_audio(final_audio)
 
     output_dir = os.path.join('output')
     os.makedirs(output_dir, exist_ok=True)
