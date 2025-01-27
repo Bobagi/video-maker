@@ -17,7 +17,7 @@ def main():
         print(f"URL: {img['url']}, Fotógrafo: {img['photographer']}")
     
     # Teste: Buscar vídeos
-    videos = pexels.buscar_videos(query, num=3)
+    videos = pexels.buscar_videos(query, num=3, orientation="portrait")
     print("\nVídeos Encontrados:")
     for vid in videos:
         print(f"URL: {vid['url']}, Duração: {vid['duration']} segundos")

@@ -14,8 +14,8 @@ class PexelsAPI:
             print("Erro ao buscar imagens:", response.status_code, response.text)
             return []
 
-    def buscar_videos(self, query, num=5):
-        url = f"{self.base_url}/videos/search?query={query}&per_page={num}"
+    def buscar_videos(self, query, num=5, orientation="portrait"):
+        url = f"{self.base_url}/videos/search?query={query}&per_page={num}&orientation={orientation}"
         response = requests.get(url, headers=self.headers)
         if response.status_code == 200:
             return response.json()['videos']
