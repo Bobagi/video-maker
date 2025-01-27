@@ -22,3 +22,19 @@ class PexelsAPI:
         else:
             print("Erro ao buscar vídeos:", response.status_code, response.text)
             return []
+        
+    def baixar_arquivo(self, url, destino):
+        try:
+            response = requests.get(url, stream=True)
+            if response.status_code == 200:
+                with open(destino, "wb") as f:
+                    for chunk in response.iter_content(1024):
+                        f.write(chunk)
+                print(f"Arquivo baixado: {destino}")
+                return True
+            else:
+                print(f"Erro ao baixar arquivo: {url}")
+                return False
+        except Exception as e:
+            print(f"Erro durante o download: {e}")
+            return False
