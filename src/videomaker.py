@@ -8,7 +8,7 @@ load_dotenv()
 # Defina o caminho completo para o magick.exe
 mpy_config.IMAGEMAGICK_BINARY = os.getenv('IMAGEMAGICK_PATH')
 
-def criar_video(download_dir, output_file="top5_video.mp4"):
+def criar_video(download_dir, music=None, output_file="top5_video.mp4"):
     clips = []
     screen_width, screen_height = 1080, 1920  # Resolução 9:16
 
@@ -61,20 +61,34 @@ def criar_video(download_dir, output_file="top5_video.mp4"):
 
     # Concatenar todos os clipes
     final_clip = concatenate_videoclips(clips, method="compose")
-    
-    # if music is not None:
-    #     audio_clip = AudioFileClip(music)
-        
-    #     final_audio = audio_clip.subclip(0, final_clip.duration)
-    #     final_clip = final_clip.set_audio(final_audio)
+
+    # Adicionar música (se fornecida)
+    if music is not None:
+        audio_clip = AudioFileClip(music)
+
+        # Ajustar a duração do áudio para o vídeo final
+        if audio_clip.duration < final_clip.duration:
+            # Loop na música se for mais curta que o vídeo
+            audio_clip = audio_clip.audio_loop(duration=final_clip.duration)
+        else:
+            # Cortar música se for mais longa que o vídeo
+            audio_clip = audio_clip.subclip(0, final_clip.duration)
+
+        # Vincular o áudio ao vídeo final
+        final_clip = final_clip.set_audio(audio_clip)
 
     output_dir = os.path.join('output')
     os.makedirs(output_dir, exist_ok=True)
     
     # Exportar o vídeo final
-    final_clip.write_videofile(output_dir + "/" + output_file, fps=24)
+    final_clip.write_videofile(os.path.join(output_dir, output_file), fps=24)
     print(f"Vídeo final criado: {output_file}")
 
 # Diretório onde os arquivos foram baixados
 download_dir = os.path.join('downloads')
-criar_video(download_dir)
+
+# Caminho para a música (adicione manualmente a música desejada)
+music_path = os.path.join('downloads', 'musica.mp3')
+
+# Criar vídeo com música
+criar_video(download_dir, music=music_path)
