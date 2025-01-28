@@ -11,7 +11,7 @@ DOWNLOAD_DIR = os.getenv("DOWNLOAD_DIR", "downloads")
 
 def main():
     # query = "waterfall"
-    query = "Cachoeira da Neblina"
+    query = "Mountain"
     print("=== Testando API do Pexels ===")
     pexels(query)
     print("\n=== Testando API do Pixabay ===")
