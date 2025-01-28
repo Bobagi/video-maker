@@ -10,17 +10,18 @@ PIXABAY_API_KEY = os.getenv("PIXABAY_API_KEY")
 DOWNLOAD_DIR = os.getenv("DOWNLOAD_DIR", "downloads")
 
 def main():
+    # query = "waterfall"
+    query = "Cachoeira da Neblina"
     print("=== Testando API do Pexels ===")
-    pexels()
+    pexels(query)
     print("\n=== Testando API do Pixabay ===")
-    pixabay()
+    pixabay(query)
 
     
-def pixabay():
+def pixabay(query):
     pixabay = PixabayAPI(PIXABAY_API_KEY)
     
     # Teste: Buscar imagens
-    query = "waterfall"
     imagens = pixabay.buscar_imagens(query, num=3, orientation="vertical")
     print("Imagens Encontradas no Pixabay:")
     for img in imagens:
@@ -49,11 +50,10 @@ def pixabay():
         destino = os.path.join(DOWNLOAD_DIR, f"video_{i+1+3}.mp4")
         pixabay.baixar_arquivo(url, destino)
 
-def pexels():
+def pexels(query):
     pexels = PexelsAPI(PEXELS_API_KEY)
     
     # Teste: Buscar imagens
-    query = "waterfall"
     imagens = pexels.buscar_imagens(query, num=3)
     print("Imagens Encontradas:")
     for img in imagens:

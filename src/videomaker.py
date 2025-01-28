@@ -65,7 +65,7 @@ def criar_video(download_dir, music=None, output_file="top5_video.mp4"):
                 f"Top {i}", f"Cachoeira {i}", screen_width, screen_height // 4, font_size=120
             )
 
-            texto_clip = ImageClip(np.array(texto_img)).set_duration(2).set_position("top")
+            texto_clip = ImageClip(np.array(texto_img)).set_duration(2).set_position(lambda t: (0, 100 + 10 * np.sin(2 * np.pi * t)))
 
             # Sobrepor o texto sobre a imagem
             imagem_clip = CompositeVideoClip([imagem_clip, texto_clip])
@@ -88,7 +88,7 @@ def criar_video(download_dir, music=None, output_file="top5_video.mp4"):
                 f"Top {i}", f"Cachoeira {i}", screen_width, screen_height // 4, font_size=120
             )
 
-            texto_clip = ImageClip(np.array(texto_vid)).set_duration(2).set_position("top")
+            texto_clip = ImageClip(np.array(texto_vid)).set_duration(2).set_position(lambda t: (0, 100 + 10 * np.sin(2 * np.pi * t)))
 
             # Sobrepor o texto sobre o vídeo
             video_clip = CompositeVideoClip([video_clip, texto_clip])
