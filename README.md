@@ -12,7 +12,7 @@ Python 3.11.9
 ```
 
 ```
-    pip install requests
+    pip install -r requirements.txt
     pip freeze > requirements.txt
 ```
 
