@@ -21,17 +21,24 @@ class PixabayAPI:
             return []
 
     def buscar_videos(self, query, num=5):
-        url = f"{self.base_url}/videos/"
+        url = f"https://pixabay.com/api/videos/"
         params = {
-            "key": self.api_key,
-            "q": query,
-            "per_page": num
+            'key': self.api_key,
+            'q': query,
+            'per_page': num
         }
+
         response = requests.get(url, params=params)
         if response.status_code == 200:
-            return response.json().get("hits", [])
+            videos = response.json()['hits']
+            for video in videos:
+                if "medium" in video["videos"]:  # Verifica se existe a versão 'medium' (maior qualidade)
+                    video['best_quality_url'] = video["videos"]["medium"]["url"]
+                else:
+                    video['best_quality_url'] = video["videos"]["small"]["url"]  # Se não houver, usa "small"
+            return videos
         else:
-            print("Erro ao buscar vídeos:", response.status_code, response.text)
+            print("Erro ao buscar vídeos no Pixabay:", response.status_code, response.text)
             return []
         
     def baixar_arquivo(self, url, destino):

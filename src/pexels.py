@@ -18,11 +18,16 @@ class PexelsAPI:
         url = f"{self.base_url}/videos/search?query={query}&per_page={num}&orientation={orientation}"
         response = requests.get(url, headers=self.headers)
         if response.status_code == 200:
-            return response.json()['videos']
+            videos = response.json()['videos']
+            for video in videos:
+                # Pega a versão com maior qualidade disponível (maior width)
+                video['video_files'].sort(key=lambda x: x['width'], reverse=True)
+                video['best_quality_url'] = video['video_files'][0]['link']  # Maior resolução disponível
+            return videos
         else:
             print("Erro ao buscar vídeos:", response.status_code, response.text)
             return []
-        
+
     def baixar_arquivo(self, url, destino):
         try:
             response = requests.get(url, stream=True)
