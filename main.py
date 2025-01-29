@@ -10,77 +10,119 @@ PIXABAY_API_KEY = os.getenv("PIXABAY_API_KEY")
 DOWNLOAD_DIR = os.getenv("DOWNLOAD_DIR", "downloads")
 
 def main():
-    # query = "waterfall"
+    # Parâmetros de teste
     query = "Mountain"
+    buscar_imagens = False
+    tempo_total_desejado = 60  # Segundos desejados no vídeo final
+    tempo_maximo_por_video = 15  # Máximo de segundos por vídeo
+
     print("=== Testando API do Pexels ===")
-    pexels(query)
+    pexels(query, buscar_imagens, tempo_total_desejado/2, tempo_maximo_por_video)
+
     print("\n=== Testando API do Pixabay ===")
-    pixabay(query)
+    pixabay(query, buscar_imagens, tempo_total_desejado/2, tempo_maximo_por_video)
 
     
-def pixabay(query):
+def pixabay(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video):
     pixabay = PixabayAPI(PIXABAY_API_KEY)
     
-    # Teste: Buscar imagens
-    imagens = pixabay.buscar_imagens(query, num=3, orientation="vertical")
-    print("Imagens Encontradas no Pixabay:")
-    for img in imagens:
-        print(f"URL: {img['pageURL']}, Tags: {img['tags']}")
-    
-    # Teste: Buscar vídeos
-    videos = pixabay.buscar_videos(query, num=3)
+    # Buscar imagens, se necessário
+    if buscar_imagens:
+        imagens = pixabay.buscar_imagens(query, num=3, orientation="vertical")
+        print("Imagens Encontradas no Pixabay:")
+        for img in imagens:
+            print(f"URL: {img['pageURL']}, Tags: {img['tags']}")
+        
+        # Criar pasta de downloads, se não existir
+        os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+            
+        # Baixar imagens
+        print("\nDownload das imagens encontradas:")
+        for i, img in enumerate(imagens):
+            url = img['largeImageURL']  # Link direto para o arquivo de imagem
+            destino = os.path.join(DOWNLOAD_DIR, f"imagem_{i+1+3}.jpg")
+            pixabay.baixar_arquivo(url, destino)
+
+    # Buscar vídeos
+    videos = pixabay.buscar_videos(query, num=50)  # Buscar até 50 vídeos para garantir tempo suficiente
     print("\nVídeos Encontrados no Pixabay:")
+    tempo_acumulado = 0
+    contador_videos = 0
+
     for vid in videos:
-        print(f"URL: {vid['pageURL']}, Duração: {vid['duration']} segundos")
+        if tempo_acumulado >= tempo_total_desejado:
+            break  # Interrompe se já alcançamos o tempo desejado
         
-    # Criar pasta de downloads, se não existir
-    os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+        duracao = vid['duration']
+        if duracao > 200:
+            continue  # Ignorar vídeos muito longos
         
-    # Baixar imagens
-    print("\nDownload das imagens encontradas:")
-    for i, img in enumerate(imagens):
-        url = img['largeImageURL']  # Link direto para o arquivo de imagem
-        destino = os.path.join(DOWNLOAD_DIR, f"imagem_{i+1+3}.jpg")
-        pixabay.baixar_arquivo(url, destino)
-        
-    # Baixar vídeos
-    print("\nDownload dos videos encontrados:")
-    for i, vid in enumerate(videos):
+        if duracao > tempo_maximo_por_video:
+            duracao = tempo_maximo_por_video  # Limitar o tempo máximo por vídeo
+
+        tempo_acumulado += duracao
+        contador_videos += 1
+        print(f"URL: {vid['pageURL']}, Duração: {vid['duration']} segundos, Considerado: {duracao} segundos")
+
+        # Criar pasta de downloads, se não existir
+        os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+
+        # Baixar vídeo
+        print("\nDownload do vídeo encontrado:")
         url = vid['videos']['medium']['url']  # Link direto para o arquivo de vídeo
-        destino = os.path.join(DOWNLOAD_DIR, f"video_{i+1+3}.mp4")
+        destino = os.path.join(DOWNLOAD_DIR, f"video_{contador_videos+3}.mp4")
         pixabay.baixar_arquivo(url, destino)
 
-def pexels(query):
+
+def pexels(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video):
     pexels = PexelsAPI(PEXELS_API_KEY)
     
-    # Teste: Buscar imagens
-    imagens = pexels.buscar_imagens(query, num=3)
-    print("Imagens Encontradas:")
-    for img in imagens:
-        print(f"URL: {img['url']}, Fotógrafo: {img['photographer']}")
-    
-    # Teste: Buscar vídeos
-    videos = pexels.buscar_videos(query, num=3, orientation="portrait")
-    print("\nVídeos Encontrados:")
+    # Buscar imagens, se necessário
+    if buscar_imagens:
+        imagens = pexels.buscar_imagens(query, num=3)
+        print("Imagens Encontradas no Pexels:")
+        for img in imagens:
+            print(f"URL: {img['url']}, Fotógrafo: {img['photographer']}")
+        
+        # Criar pasta de downloads, se não existir
+        os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+            
+        # Baixar imagens
+        print("\nDownload das imagens encontradas:")
+        for i, img in enumerate(imagens):
+            url = img['src']['original']  # Link direto para o arquivo de imagem
+            destino = os.path.join(DOWNLOAD_DIR, f"imagem_{i+1}.jpg")
+            pexels.baixar_arquivo(url, destino)
+
+    # Buscar vídeos
+    videos = pexels.buscar_videos(query, num=50, orientation="portrait")  # Buscar até 50 vídeos para garantir tempo suficiente
+    tempo_acumulado = 0
+    contador_videos = 0
+
     for vid in videos:
-        print(f"URL: {vid['url']}, Duração: {vid['duration']} segundos")
+        if tempo_acumulado >= tempo_total_desejado:
+            break  # Interrompe se já alcançamos o tempo desejado
         
-    # Create download folder if does not exist
-    os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+        duracao = vid['duration']
+        if duracao > 200:
+            continue  # Ignorar vídeos muito longos
         
-    # Download images
-    print("\nDownload das imagens encontradas:")
-    for i, img in enumerate(imagens):
-        url = img['src']['original']  # Link direto para o arquivo de imagem
-        destino = os.path.join(DOWNLOAD_DIR, f"imagem_{i+1}.jpg")
-        pexels.baixar_arquivo(url, destino)
-        
-    # Download videos
-    print("\nDownload dos videos encontrados:")
-    for i, vid in enumerate(videos):
+        if duracao > tempo_maximo_por_video:
+            duracao = tempo_maximo_por_video  # Limitar o tempo máximo por vídeo
+
+        tempo_acumulado += duracao
+        contador_videos += 1
+        print(f"URL: {vid['url']}, Duração: {vid['duration']} segundos, Considerado: {duracao} segundos")
+
+        # Criar pasta de downloads, se não existir
+        os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+
+        # Baixar vídeo
+        print("\nDownload do vídeo encontrado:")
         url = vid['video_files'][0]['link']  # Link direto para o arquivo de vídeo
-        destino = os.path.join(DOWNLOAD_DIR, f"video_{i+1}.mp4")
+        destino = os.path.join(DOWNLOAD_DIR, f"video_{contador_videos}.mp4")
         pexels.baixar_arquivo(url, destino)
+
 
 if __name__ == "__main__":
     main()
