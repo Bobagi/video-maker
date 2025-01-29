@@ -13,7 +13,7 @@ mpy_config.IMAGEMAGICK_BINARY = os.getenv('IMAGEMAGICK_PATH')
 
 # Diretórios
 AUDIO_DIR = "output/audio"  # Onde os áudios gerados estão salvos
-SCRIPT_PATH = "scripts/roteiro_gatos.txt"  # Caminho para o arquivo do roteiro
+SCRIPT_PATH = "scripts/roteiro.txt"  # Caminho para o arquivo do roteiro
 
 def quebrar_texto(texto, largura_maxima, fonte):
     """ Quebra o texto automaticamente para caber dentro da largura do vídeo, mantendo a centralização. """
@@ -177,7 +177,19 @@ def adicionar_texto_e_audio(video_final_path, output_file="final_video_com_audio
     # Combinar áudio original com narrações  
     audio_final = CompositeAudioClip([audio_original, audio_narracao])  
     texto_final = texto_final.set_audio(audio_final)  
-    
+
+    # 🔥 Adicionar créditos ao final  
+    credits_path = os.path.join("output", "credits.mp4")  
+    if os.path.exists(credits_path):  
+        credits_clip = VideoFileClip(credits_path)
+        
+        # Garantir que os créditos tenham a mesma largura do vídeo final
+        credits_clip = credits_clip.resize(width=screen_width)
+
+        # Concatenar o vídeo final com os créditos  
+        texto_final = concatenate_videoclips([texto_final, credits_clip], method="compose")  
+        print("🎬 Créditos adicionados ao final do vídeo.")
+
     output_dir = os.path.join('output')  
     os.makedirs(output_dir, exist_ok=True)  
     
