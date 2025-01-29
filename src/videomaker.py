@@ -151,7 +151,7 @@ def adicionar_texto_e_audio(video_final_path, output_file="final_video_com_audio
                 texto_formatado = quebrar_texto(texto, int(screen_width * 0.95), fonte)  
                 
                 # Criar um clipe de texto que aparece no início do áudio e desaparece no final  
-                texto_clip = criar_texto_estilizado(texto_formatado, int(screen_width * 0.95), screen_height // 3)  
+                texto_clip = criar_texto_estilizado(texto_formatado, int(screen_width * 0.95), screen_height // 2)  
                 texto_clip = ImageClip(np.array(texto_clip)).set_duration(audio_clip.duration)  
                 texto_clip = texto_clip.set_position(("center", "center")).set_start(tempo_atual)  
                 
@@ -237,33 +237,7 @@ def criar_video(download_dir, music=None, output_file="final_video.mp4", tempo_t
     screen_width, screen_height = 1080, 1920  # Resolução 9:16
     tempo_acumulado = 0
 
-    # Adicionar imagens (se houver espaço no tempo total)
-    for i in range(1, 4):  # Supondo 3 imagens
-        if tempo_acumulado >= tempo_total_desejado:
-            break
-
-        imagem_path = os.path.join(download_dir, f"imagem_{i}.jpg")
-        if os.path.exists(imagem_path):
-            duracao_imagem = 5  # Definimos que cada imagem dura 5 segundos
-
-            if tempo_acumulado + duracao_imagem > tempo_total_desejado:
-                duracao_imagem = tempo_total_desejado - tempo_acumulado  # Ajustar para não ultrapassar
-
-            imagem_clip = ImageClip(imagem_path, duration=duracao_imagem)
-
-            # Redimensionar e centralizar imagem
-            imagem_clip = imagem_clip.resize(height=screen_height)
-            imagem_clip = imagem_clip.on_color(
-                size=(screen_width, screen_height),
-                color=(0, 0, 0),
-                pos="center"
-            )
-
-            imagem_clip = imagem_clip.set_fps(24)
-            clips.append(imagem_clip)
-            tempo_acumulado += duracao_imagem
-
-    # Adicionar vídeos, respeitando o tempo total desejado
+    # Adicionar vídeos respeitando o tempo total desejado
     for i in range(1, 10):  # Supondo até 10 vídeos para garantir que haja tempo suficiente
         if tempo_acumulado >= tempo_total_desejado:
             break
@@ -280,15 +254,25 @@ def criar_video(download_dir, music=None, output_file="final_video.mp4", tempo_t
 
             video_clip = video_clip.subclip(0, duracao_video)  # Cortar para o tempo máximo permitido
 
-            # Redimensionar vídeo ao formato vertical
-            video_clip = video_clip.resize(height=screen_height)
-            video_clip = video_clip.crop(width=screen_width, height=screen_height, x_center=video_clip.w / 2, y_center=video_clip.h / 2)
+            # 🔥 NOVA CORREÇÃO: Garantir que o vídeo preencha 1080x1920 sem bordas pretas
+            proporcao_video = video_clip.w / video_clip.h
+            proporcao_tela = screen_width / screen_height
+
+            if proporcao_video > proporcao_tela:
+                # Se o vídeo for mais largo que a tela, redimensionamos para altura e cortamos os lados
+                video_clip = video_clip.resize(height=screen_height)
+                video_clip = video_clip.crop(width=screen_width, height=screen_height,
+                                             x_center=video_clip.w / 2, y_center=video_clip.h / 2)
+            else:
+                # Se o vídeo for mais estreito, redimensionamos para a largura e cortamos o topo/fundo
+                video_clip = video_clip.resize(width=screen_width)
+                video_clip = video_clip.crop(width=screen_width, height=screen_height,
+                                             x_center=video_clip.w / 2, y_center=video_clip.h / 2)
 
             clips.append(video_clip)
             tempo_acumulado += duracao_video
 
-    print(f"total final acumulado: {tempo_acumulado:.1f}s")
-    # return
+    print(f"Total final acumulado: {tempo_acumulado:.1f}s")
 
     if not clips:
         print("Nenhum arquivo encontrado para criar o vídeo.")
@@ -330,7 +314,7 @@ def criar_video(download_dir, music=None, output_file="final_video.mp4", tempo_t
     for clip in clips:
         clip.close()
         
-    print(f"Vídeo final criado: {output_file}")
+    print(f"🎥 Vídeo final criado: {output_file}")
 
 # Diretório onde os arquivos foram baixados
 download_dir = os.path.join('downloads')
@@ -339,7 +323,7 @@ download_dir = os.path.join('downloads')
 music_path = os.path.join('musics', 'musica.mp3')
 
 # Criar vídeo com música
-# criar_video(download_dir, music=music_path, tempo_total_desejado=60, tempo_maximo_por_video=15)
+criar_video(download_dir, music=music_path, tempo_total_desejado=60, tempo_maximo_por_video=15)
 video_base_path = os.path.join("output", "final_video.mp4")
 
 # Agora adicionamos os textos e a narração por cima

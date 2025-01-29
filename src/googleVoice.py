@@ -13,7 +13,7 @@ SCRIPT_PATH = "scripts/roteiro_gatos.txt"  # Caminho do roteiro
 OUTPUT_DIR = "output/audio"  # Pasta onde os áudios serão salvos
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-def gerar_audio_google(texto, idioma="pt-BR", nome_voz="pt-BR-Wavenet-A", arquivo_audio="output.wav"):
+def gerar_audio_google(texto, idioma="pt-BR", nome_voz="pt-BR-Wavenet-B", arquivo_audio="output.wav"):
     try:
         client = texttospeech.TextToSpeechClient(
             client_options={"api_key": API_KEY}
@@ -28,7 +28,7 @@ def gerar_audio_google(texto, idioma="pt-BR", nome_voz="pt-BR-Wavenet-A", arquiv
             audio_encoding=texttospeech.AudioEncoding.LINEAR16,
             effects_profile_id=["small-bluetooth-speaker-class-device"],
             speaking_rate=1.0,
-            pitch=2.0
+            pitch=0.5
         )
 
         response = client.synthesize_speech(
@@ -73,3 +73,4 @@ def processar_roteiro(script_path):
 
 if __name__ == "__main__":
     processar_roteiro(SCRIPT_PATH)
+    # gerar_audio_google("Gostou? Curta e compartilhe para mais curiosidades!")

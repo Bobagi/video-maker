@@ -11,16 +11,16 @@ DOWNLOAD_DIR = os.getenv("DOWNLOAD_DIR", "downloads")
 
 def main():
     # Parâmetros de teste
-    query = "Mountain"
+    query = "Cats"
     buscar_imagens = False
     tempo_total_desejado = 60  # Segundos desejados no vídeo final
-    tempo_maximo_por_video = 15  # Máximo de segundos por vídeo
+    tempo_maximo_por_video = 10  # Máximo de segundos por vídeo
 
     print("=== Testando API do Pexels ===")
-    pexels(query, buscar_imagens, tempo_total_desejado/2, tempo_maximo_por_video)
+    pexels(query, buscar_imagens, tempo_total_desejado/1.5, tempo_maximo_por_video)
 
     print("\n=== Testando API do Pixabay ===")
-    pixabay(query, buscar_imagens, tempo_total_desejado/2, tempo_maximo_por_video)
+    pixabay(query, buscar_imagens, tempo_total_desejado/3, tempo_maximo_por_video)
 
     
 def pixabay(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video):
