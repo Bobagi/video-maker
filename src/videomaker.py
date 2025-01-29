@@ -91,15 +91,33 @@ def criar_texto_typewriter(texto, width, height, font_path="fonts/Roboto.ttf", f
     return concatenate_videoclips([typewriter_clip, hold_clip], method="compose")
 
 # Função principal para criar o vídeo
-def criar_video(download_dir, music=None, output_file="top5_video.mp4"):
+def criar_video(download_dir, music=None, output_file="final_video.mp4", tempo_total_desejado=60, tempo_maximo_por_video=15):
+    """
+    Cria um vídeo final combinando vídeos e imagens baixadas, garantindo que o tempo total fique dentro do desejado.
+    
+    :param download_dir: Diretório onde os arquivos baixados estão armazenados.
+    :param music: Caminho para o arquivo de música.
+    :param output_file: Nome do arquivo de saída.
+    :param tempo_total_desejado: Tempo total do vídeo final em segundos.
+    :param tempo_maximo_por_video: Tempo máximo permitido para cada vídeo.
+    """
     clips = []
     screen_width, screen_height = 1080, 1920  # Resolução 9:16
+    tempo_acumulado = 0
 
-    # Adicionar imagens
+    # Adicionar imagens (se houver espaço no tempo total)
     for i in range(1, 4):  # Supondo 3 imagens
+        if tempo_acumulado >= tempo_total_desejado:
+            break
+
         imagem_path = os.path.join(download_dir, f"imagem_{i}.jpg")
         if os.path.exists(imagem_path):
-            imagem_clip = ImageClip(imagem_path, duration=5)  # 5 segundos por imagem
+            duracao_imagem = 5  # Definimos que cada imagem dura 5 segundos
+
+            if tempo_acumulado + duracao_imagem > tempo_total_desejado:
+                duracao_imagem = tempo_total_desejado - tempo_acumulado  # Ajustar para não ultrapassar
+
+            imagem_clip = ImageClip(imagem_path, duration=duracao_imagem)
 
             # Redimensionar e centralizar imagem
             imagem_clip = imagem_clip.resize(height=screen_height)
@@ -115,7 +133,7 @@ def criar_video(download_dir, music=None, output_file="top5_video.mp4"):
                 screen_width,
                 screen_height // 4,
                 font_size=120,
-                duration=2,  # Duração total do efeito typewriter
+                duration=2,  # Duração do efeito typewriter
                 hold_time=2  # Tempo que o texto permanece após o efeito
             ).set_position(("center", 50))  # Posição no topo do vídeo
 
@@ -124,12 +142,24 @@ def criar_video(download_dir, music=None, output_file="top5_video.mp4"):
 
             imagem_clip = imagem_clip.set_fps(24)
             clips.append(imagem_clip)
+            tempo_acumulado += duracao_imagem
 
-    # Adicionar vídeos
-    for i in range(1, 4):  # Supondo 3 vídeos
+    # Adicionar vídeos, respeitando o tempo total desejado
+    for i in range(1, 10):  # Supondo até 10 vídeos para garantir que haja tempo suficiente
+        if tempo_acumulado >= tempo_total_desejado:
+            break
+
         video_path = os.path.join(download_dir, f"video_{i}.mp4")
         if os.path.exists(video_path):
-            video_clip = VideoFileClip(video_path).subclip(0, 5)  # Usar apenas 5 segundos
+            print(f"Adicionando vídeo {video_path}, total acumulado: {tempo_acumulado:.1f}s")
+            video_clip = VideoFileClip(video_path)
+            duracao_video = min(video_clip.duration, tempo_maximo_por_video)
+
+            # Ajustar para que o tempo total não ultrapasse o limite desejado
+            if tempo_acumulado + duracao_video > tempo_total_desejado:
+                duracao_video = tempo_total_desejado - tempo_acumulado  # Ajustar para não ultrapassar
+
+            video_clip = video_clip.subclip(0, duracao_video)  # Cortar para o tempo máximo permitido
 
             # Redimensionar vídeo ao formato vertical
             video_clip = video_clip.resize(height=screen_height)
@@ -141,16 +171,20 @@ def criar_video(download_dir, music=None, output_file="top5_video.mp4"):
                 screen_width,
                 screen_height // 4,
                 font_size=120,
-                duration=2,  # Duração total do efeito typewriter
-                hold_time=2  # Tempo que o texto permanece após o efeito
+                duration=0.6,  # Duração do efeito typewriter
+                hold_time=5  # Tempo que o texto permanece após o efeito
             ).set_position(("center", 50))  # Posição no topo do vídeo
 
             # Sobrepor o texto sobre o vídeo
             video_clip = CompositeVideoClip([video_clip, texto_clip])
 
             clips.append(video_clip)
+            tempo_acumulado += duracao_video
 
-    if clips == []:
+    print(f"total final acumulado: {tempo_acumulado:.1f}s")
+    # return
+
+    if not clips:
         print("Nenhum arquivo encontrado para criar o vídeo.")
         return
 
@@ -159,7 +193,7 @@ def criar_video(download_dir, music=None, output_file="top5_video.mp4"):
     duration_transicao = 0.3  # Duração da transição
 
     for i in range(len(clips) - 1):
-        clipe_proximo = clips[i + 1]
+        clipe_proximo = clips[i]
         clipe_proximo = clipe_proximo.crossfadein(duration_transicao)
         clips_com_transicoes.append(clipe_proximo)
 
@@ -196,7 +230,7 @@ def criar_video(download_dir, music=None, output_file="top5_video.mp4"):
 download_dir = os.path.join('downloads')
 
 # Caminho para a música (adicione manualmente a música desejada)
-music_path = os.path.join('downloads', 'musica.mp3')
+music_path = os.path.join('musics', 'musica.mp3')
 
 # Criar vídeo com música
-criar_video(download_dir, music=music_path)
+criar_video(download_dir, music=music_path, tempo_total_desejado=60, tempo_maximo_por_video=15)
