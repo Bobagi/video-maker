@@ -1,6 +1,7 @@
 import os
 from google.cloud import texttospeech_v1 as texttospeech
 from dotenv import load_dotenv
+from pydub import AudioSegment  # Importar a biblioteca pydub para calcular a duração do áudio
 
 # Carregar variáveis do .env
 load_dotenv()
@@ -41,8 +42,12 @@ def gerar_audio_google(texto, idioma="pt-BR", nome_voz="pt-BR-Wavenet-A", arquiv
             out.write(response.audio_content)
         print(f"✅ Áudio gerado: {arquivo_audio}")
 
+        # Retornar o caminho do arquivo de áudio para calcular a duração
+        return arquivo_audio
+
     except Exception as e:
         print(f"❌ Erro ao gerar áudio: {e}")
+        return None
 
 def processar_roteiro(script_path):
     try:
@@ -50,6 +55,7 @@ def processar_roteiro(script_path):
             linhas = file.readlines()
 
         narracao_id = 0  # Número da narração no roteiro
+        tempo_total = 0  # Variável para armazenar o tempo total de áudio
 
         for linha in linhas:
             if linha.startswith("NARRACAO:"):
@@ -64,13 +70,18 @@ def processar_roteiro(script_path):
                 for parte_id, parte in enumerate(partes, start=1):
                     parte_texto = parte.strip()
                     arquivo_audio = os.path.join(OUTPUT_DIR, f"narracao_{narracao_id}_{parte_id}.wav")
-                    gerar_audio_google(parte_texto, nome_voz="pt-BR-Wavenet-A", arquivo_audio=arquivo_audio)
+                    arquivo_gerado = gerar_audio_google(parte_texto, nome_voz="pt-BR-Wavenet-A", arquivo_audio=arquivo_audio)
+                    
+                    # Calcular a duração do áudio gerado e adicionar ao tempo total
+                    if arquivo_gerado:
+                        audio = AudioSegment.from_file(arquivo_gerado)
+                        duracao = len(audio) / 1000  # Converter milissegundos para segundos
+                        tempo_total += duracao
 
-        print("✅ Todos os áudios foram gerados!")
+        print(f"✅ Todos os áudios foram gerados! Tempo total: {tempo_total:.2f} segundos.")
 
     except Exception as e:
         print(f"❌ Erro ao processar o roteiro: {e}")
 
 if __name__ == "__main__":
     processar_roteiro(SCRIPT_PATH)
-    # gerar_audio_google("Gostou? Curta e compartilhe para mais curiosidades!")

@@ -114,7 +114,7 @@ def criar_clipe_texto(texto, duracao_audio, width, height, font_path="fonts/Robo
     return typewriter_clip.set_duration(duracao_audio)
 
 def adicionar_texto_e_audio(video_final_path, output_file="final_video_com_audio.mp4",
-                            volume_narracao=1.5, volume_musica=0.3):
+                            volume_narracao=1.5, volume_musica=0.2):
     """  
     Pega o vídeo já gerado e adiciona os textos e áudios sincronizados sobre ele,  
     ajustando os volumes da música e da narração.  
@@ -335,7 +335,7 @@ download_dir = os.path.join('downloads')
 music_path = os.path.join('musics', 'musica.mp3')
 
 # Criar vídeo com música
-criar_video(download_dir, music=music_path, tempo_total_desejado=80, tempo_maximo_por_video=10)
+criar_video(download_dir, music=music_path, tempo_total_desejado=60, tempo_maximo_por_video=10)
 video_base_path = os.path.join("output", "final_video.mp4")
 
 # Agora adicionamos os textos e a narração por cima

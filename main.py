@@ -1,4 +1,5 @@
 import os
+import sys  # Adicionado para lidar com argumentos da linha de comando
 from dotenv import load_dotenv
 from src.pexels import PexelsAPI
 from src.pixabay import PixabayAPI
@@ -10,19 +11,23 @@ PIXABAY_API_KEY = os.getenv("PIXABAY_API_KEY")
 DOWNLOAD_DIR = os.getenv("DOWNLOAD_DIR", "downloads")
 
 def main():
+    # Verifica se um argumento foi passado
+    if len(sys.argv) < 2:
+        print("Uso: python main.py <query>")
+        sys.exit(1)  # Encerra o script se nenhum argumento for passado
+
     # Parâmetros de teste
-    query = "Cats"
+    query = sys.argv[1]  # Obtém o valor de `query` do primeiro argumento
     buscar_imagens = False
     tempo_total_desejado = 60  # Segundos desejados no vídeo final
     tempo_maximo_por_video = 10  # Máximo de segundos por vídeo
 
-    print("=== Testando API do Pexels ===")
+    print(f"=== Testando API do Pexels com query: '{query}' ===")
     contador_videos = pexels(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video)
 
-    print("\n=== Testando API do Pixabay ===")
-    pixabay(query, buscar_imagens, 20, tempo_maximo_por_video, contador_videos)
+    print(f"\n=== Testando API do Pixabay com query: '{query}' ===")
+    # pixabay(query, buscar_imagens, 20, tempo_maximo_por_video, contador_videos)
 
-    
 def pixabay(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video, contador_videos = 0):
     pixabay = PixabayAPI(PIXABAY_API_KEY)
     
