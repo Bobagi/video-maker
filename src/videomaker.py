@@ -235,7 +235,7 @@ def carregar_roteiro(script_path):
         return {}
     
 # Função principal para criar o vídeo
-def criar_video(download_dir, music=None, output_file="final_video.mp4", tempo_total_desejado=60, tempo_maximo_por_video=15):
+def criar_video(download_dir, music=None, output_file="final_video.mp4", tempo_total_desejado=60, tempo_maximo_por_video=10):
     """
     Cria um vídeo final combinando vídeos e imagens baixadas, garantindo que o tempo total fique dentro do desejado.
     
@@ -294,12 +294,12 @@ def criar_video(download_dir, music=None, output_file="final_video.mp4", tempo_t
     clips_com_transicoes = []
     duration_transicao = 0.3  # Duração da transição
 
-    for i in range(len(clips) - 1):
-        clipe_proximo = clips[i]
-        clipe_proximo = clipe_proximo.crossfadein(duration_transicao)
-        clips_com_transicoes.append(clipe_proximo)
+    # APLICAR FADE-IN APENAS A PARTIR DO SEGUNDO CLIPE
+    clips_com_transicoes.append(clips[0])  # O primeiro clipe não recebe efeito
 
-    clips_com_transicoes.append(clips[-1])
+    for i in range(1, len(clips)):
+        clipe_atual = clips[i].crossfadein(duration_transicao)  # Aplicando fade-in só nos próximos clipes
+        clips_com_transicoes.append(clipe_atual)
 
     # Concatenar todos os clipes com as transições
     final_clip = concatenate_videoclips(clips_com_transicoes, method="compose")
@@ -335,7 +335,7 @@ download_dir = os.path.join('downloads')
 music_path = os.path.join('musics', 'musica.mp3')
 
 # Criar vídeo com música
-criar_video(download_dir, music=music_path, tempo_total_desejado=60, tempo_maximo_por_video=15)
+criar_video(download_dir, music=music_path, tempo_total_desejado=80, tempo_maximo_por_video=10)
 video_base_path = os.path.join("output", "final_video.mp4")
 
 # Agora adicionamos os textos e a narração por cima

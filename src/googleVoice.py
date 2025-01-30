@@ -9,11 +9,11 @@ load_dotenv()
 API_KEY = os.getenv("GOOGLE_API_KEY")
 
 # Caminhos das pastas
-SCRIPT_PATH = "scripts/roteiro_gatos.txt"  # Caminho do roteiro
+SCRIPT_PATH = "scripts/roteiro.txt"  # Caminho do roteiro
 OUTPUT_DIR = "output/audio"  # Pasta onde os áudios serão salvos
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-def gerar_audio_google(texto, idioma="pt-BR", nome_voz="pt-BR-Wavenet-B", arquivo_audio="output.wav"):
+def gerar_audio_google(texto, idioma="pt-BR", nome_voz="pt-BR-Wavenet-A", arquivo_audio="output.wav"):
     try:
         client = texttospeech.TextToSpeechClient(
             client_options={"api_key": API_KEY}
