@@ -1,34 +1,52 @@
 import os
-import sys  # Adicionado para lidar com argumentos da linha de comando
+import sys
+import math
 from dotenv import load_dotenv
 from src.pexels import PexelsAPI
 from src.pixabay import PixabayAPI
+from src.googleVoice import GoogleVoice
+from src.videomaker import VideoMaker
 
 load_dotenv()
 
 PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
 PIXABAY_API_KEY = os.getenv("PIXABAY_API_KEY")
 DOWNLOAD_DIR = os.getenv("DOWNLOAD_DIR", "downloads")
+SCRIPT_PATH = os.getenv("SCRIPT_PATH", "scripts/roteiro.txt")
 
 def main():
+    if not os.path.exists(SCRIPT_PATH):
+        print(f"Erro: O arquivo '${SCRIPT_PATH}' não foi encontrado.")
+        sys.exit(1)
+        
     # Verifica se um argumento foi passado
     if len(sys.argv) < 2:
         print("Uso: python main.py <query>")
         sys.exit(1)  # Encerra o script se nenhum argumento for passado
 
+    # Executar o GoogleVoice ao final
+    print("\n=== Executando GoogleVoice ===")
+    google_voice = GoogleVoice()
+    tempo_total = google_voice.processar_roteiro()
+    print(f"Tempo total de áudio gerado: {tempo_total:.2f} segundos")
+
     # Parâmetros de teste
     query = sys.argv[1]  # Obtém o valor de `query` do primeiro argumento
     buscar_imagens = False
-    tempo_total_desejado = 60  # Segundos desejados no vídeo final
+    tempo_total_desejado = math.ceil(tempo_total / 10) * 10  # Segundos desejados no vídeo final
     tempo_maximo_por_video = 10  # Máximo de segundos por vídeo
 
     print(f"=== Testando API do Pexels com query: '{query}' ===")
-    contador_videos = pexels(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video)
+    contador_videos = pexels(query, buscar_imagens, tempo_total_desejado * 0.8, tempo_maximo_por_video)
 
     print(f"\n=== Testando API do Pixabay com query: '{query}' ===")
-    # pixabay(query, buscar_imagens, 20, tempo_maximo_por_video, contador_videos)
+    pixabay(query, buscar_imagens, tempo_total_desejado * 0.2, tempo_maximo_por_video, contador_videos)
+    
+    videomaker = VideoMaker()
+    videomaker.criar_video("downloads", "musics/musica.mp3", tempo_total_desejado=tempo_total_desejado)
+    videomaker.adicionar_texto_e_audio("output/final_video.mp4")
 
-def pixabay(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video, contador_videos = 0):
+def pixabay(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video, contador_videos=0):
     pixabay = PixabayAPI(PIXABAY_API_KEY)
     
     # Buscar imagens, se necessário
@@ -81,7 +99,7 @@ def pixabay(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video,
     return contador_videos
 
 
-def pexels(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video, contador_videos = 0):
+def pexels(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video, contador_videos=0):
     pexels = PexelsAPI(PEXELS_API_KEY)
     
     # Buscar imagens, se necessário
