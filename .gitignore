@@ -3,6 +3,8 @@
 *.wav
 scripts/
 *.txt
+client_secrets.json
+token.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

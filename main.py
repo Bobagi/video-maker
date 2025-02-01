@@ -1,11 +1,14 @@
 import os
 import sys
 import math
+import datetime
+import shutil
 from dotenv import load_dotenv
 from src.pexels import PexelsAPI
 from src.pixabay import PixabayAPI
 from src.googleVoice import GoogleVoice
 from src.videomaker import VideoMaker
+from src.uploadYoutube import YouTubeUploader
 
 load_dotenv()
 
@@ -31,7 +34,7 @@ def main():
         tempo_total = google_voice.processar_roteiro(roteiro_path)
         print(f"Tempo total de áudio gerado: {tempo_total:.2f} segundos")
 
-        query = encontrar_search(roteiro_path)
+        query = find_value(roteiro_path, "SEARCH:")
         buscar_imagens = False
         tempo_total_desejado = math.ceil(tempo_total / 10) * 10
         tempo_maximo_por_video = 10
@@ -43,14 +46,45 @@ def main():
         # pixabay(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video, contador_videos)
 
         videomaker = VideoMaker()
-        videomaker.criar_video("downloads", "musics/musica.mp3", tempo_total_desejado=tempo_total_desejado)
-        videomaker.adicionar_texto_e_audio("output/final_video.mp4", output_file=f"{arquivo}.mp4", script_file=roteiro_path)
+        videomaker.criar_video("downloads", os.path.join("musics", "musica.mp3"), tempo_total_desejado=tempo_total_desejado)
+        videomaker.adicionar_texto_e_audio(os.path.join("output", "final_video.mp4"), output_file=f"{arquivo}.mp4", script_file=roteiro_path)
+        
+        youtube = YouTubeUploader()
+        youtube.authenticate()
+        
+        last_date = youtube.get_last_scheduled_video_date()
+        if last_date:
+            print("O último vídeo agendado está marcado para:", last_date)
+            base_time = last_date + datetime.timedelta(seconds=1)
+        else:
+            print("Nenhum vídeo agendado foi encontrado.")
+            base_time = None 
+            
+        next_schedule = youtube.generate_schedule(1, start_time=base_time)[0]
+        
+        titulo = find_value(roteiro_path, "TÍTULO:")
+        hashtags = find_value(roteiro_path, "HASHTAGS:")
+
+        upload_success = youtube.upload_single_video(
+            os.path.join("output", f"{arquivo}.mp4"),
+            titulo,
+            hashtags,
+            scheduled_time=next_schedule  # Passa o horário calculado
+        )
+        
+        if upload_success:
+            print("Upload realizado com sucesso!")
+            SCRIPT_BACKUP_PATH = "script_backup"
+            os.makedirs(SCRIPT_BACKUP_PATH, exist_ok=True)
+            shutil.move(roteiro_path, os.path.join(SCRIPT_BACKUP_PATH, arquivo))
+        else:
+            print("Houve um erro no upload.")
     
-def encontrar_search(arquivo):
+def find_value(arquivo, termo):
     with open(arquivo, 'r', encoding='utf-8') as f:
         for linha in f:
-            if linha.startswith("SEARCH:"):
-                return linha.split("SEARCH:", 1)[1].strip()
+            if linha.startswith(termo):
+                return linha.split(termo, 1)[1].strip()
     return None
 
 def pixabay(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video, contador_videos=0):
