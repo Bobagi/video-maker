@@ -11,9 +11,8 @@ load_dotenv()
 mpy_config.IMAGEMAGICK_BINARY = os.getenv('IMAGEMAGICK_PATH')
 
 class VideoMaker:
-    def __init__(self, audio_dir="output/audio", script_path="scripts/roteiro.txt"):
+    def __init__(self, audio_dir=os.path.join("output", "audio")):
         self.audio_dir = audio_dir
-        self.script_path = script_path
 
     def quebrar_texto(self, texto, largura_maxima, fonte):
         linhas = []
@@ -78,11 +77,11 @@ class VideoMaker:
 
         return img
 
-    def carregar_roteiro(self):
+    def carregar_roteiro(self, script_path="scripts/roteiro.txt"):
         narracoes = {}
 
         try:
-            with open(self.script_path, "r", encoding="utf-8") as file:
+            with open(script_path, "r", encoding="utf-8") as file:
                 linhas = file.readlines()
 
             narracao_id = 0
@@ -172,7 +171,7 @@ class VideoMaker:
         for clip in clips:
             clip.close()
 
-    def adicionar_texto_e_audio(self, video_final_path, output_file="final_video_com_audio.mp4",
+    def adicionar_texto_e_audio(self, video_final_path, output_file="final_video_com_audio.mp4", script_file="scripts/roteiro.txt",
                                 volume_narracao=1.5, volume_musica=0.2):
         if not os.path.exists(video_final_path):
             return  
@@ -180,7 +179,10 @@ class VideoMaker:
         video_clip = VideoFileClip(video_final_path)
         screen_width, screen_height = video_clip.size
         audio_original = video_clip.audio.fx(afx.volumex, volume_musica)
-        narracoes = self.carregar_roteiro()
+        narracoes = self.carregar_roteiro(script_file)
+        print("=== Adicionando texto e áudio ao vídeo ===")
+        print(narracoes)
+        print("=== Adicionando texto e áudio ao vídeo ===")
         clipes_texto = []
         clipes_audio = []
         tempo_atual = 0
@@ -189,9 +191,13 @@ class VideoMaker:
         fonte = ImageFont.truetype(fonte_path, fonte_tamanho)
 
         for narracao_id, partes_texto in narracoes.items():
+            print("=== Adicionando partes_texto ===")
+            print(partes_texto)
+            print("=== Adicionando partes_texto ===")
             parte_id = 1
             for texto in partes_texto:
                 audio_path = os.path.join(self.audio_dir, f"narracao_{narracao_id}_{parte_id}.wav")
+                print(f"=== Adicionando áudio {audio_path} ===")
                 if os.path.exists(audio_path):
                     audio_clip = AudioFileClip(audio_path).fx(afx.volumex, volume_narracao)
                     texto_formatado = self.quebrar_texto(texto, int(screen_width * 0.95), fonte)
@@ -200,6 +206,8 @@ class VideoMaker:
                     clipes_texto.append(texto_clip)
                     clipes_audio.append(audio_clip.set_start(tempo_atual))
                     tempo_atual += audio_clip.duration
+                else:
+                    print(f"Áudio não encontrado para narração {narracao_id}, parte {parte_id}")
                 parte_id += 1
 
         texto_final = CompositeVideoClip([video_clip] + clipes_texto).set_audio(CompositeAudioClip([audio_original, CompositeAudioClip(clipes_audio)]))
@@ -207,5 +215,5 @@ class VideoMaker:
 
 if __name__ == "__main__":
     vm = VideoMaker()
-    vm.criar_video("downloads", "musics/musica.mp3")
-    vm.adicionar_texto_e_audio("output/final_video.mp4")
+    vm.criar_video("downloads", os.path.join("musics", "musica.mp3"))
+    vm.adicionar_texto_e_audio(os.path.join("output", "final_video.mp4"))

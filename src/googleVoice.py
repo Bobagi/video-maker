@@ -11,8 +11,8 @@ class GoogleVoice:
         # Pegar a API Key do arquivo .env
         self.API_KEY = os.getenv("GOOGLE_API_KEY")
         # Caminhos das pastas
-        self.SCRIPT_PATH = "scripts/roteiro.txt"  # Caminho do roteiro
-        self.OUTPUT_DIR = "output/audio"  # Pasta onde os áudios serão salvos
+        self.SCRIPT_PATH = os.path.join("scripts", "roteiro.txt") # Caminho do roteiro
+        self.OUTPUT_DIR = os.path.join("output", "audio") # Pasta onde os áudios serão salvos
         os.makedirs(self.OUTPUT_DIR, exist_ok=True)
 
     def gerar_audio_google(self, texto, idioma="pt-BR", nome_voz="pt-BR-Wavenet-A", arquivo_audio="output.wav"):

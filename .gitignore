@@ -2,6 +2,7 @@
 *.mp3
 *.wav
 scripts/
+*.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

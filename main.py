@@ -12,39 +12,46 @@ load_dotenv()
 PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
 PIXABAY_API_KEY = os.getenv("PIXABAY_API_KEY")
 DOWNLOAD_DIR = os.getenv("DOWNLOAD_DIR", "downloads")
-SCRIPT_PATH = os.getenv("SCRIPT_PATH", "scripts/roteiro.txt")
+SCRIPT_PATH = os.getenv("SCRIPT_PATH", "scripts")
 
 def main():
     if not os.path.exists(SCRIPT_PATH):
-        print(f"Erro: O arquivo '${SCRIPT_PATH}' não foi encontrado.")
+        print(f"Erro: A pasta '${SCRIPT_PATH}' não foi encontrada.")
         sys.exit(1)
-        
-    # Verifica se um argumento foi passado
-    if len(sys.argv) < 2:
-        print("Uso: python main.py <query>")
-        sys.exit(1)  # Encerra o script se nenhum argumento for passado
 
-    # Executar o GoogleVoice ao final
-    print("\n=== Executando GoogleVoice ===")
-    google_voice = GoogleVoice()
-    tempo_total = google_voice.processar_roteiro()
-    print(f"Tempo total de áudio gerado: {tempo_total:.2f} segundos")
+    for arquivo in os.listdir(SCRIPT_PATH):
+        roteiro_path = os.path.join(SCRIPT_PATH, arquivo)
 
-    # Parâmetros de teste
-    query = sys.argv[1]  # Obtém o valor de `query` do primeiro argumento
-    buscar_imagens = False
-    tempo_total_desejado = math.ceil(tempo_total / 10) * 10  # Segundos desejados no vídeo final
-    tempo_maximo_por_video = 10  # Máximo de segundos por vídeo
+        if not os.path.isfile(roteiro_path):
+            continue
 
-    print(f"=== Testando API do Pexels com query: '{query}' ===")
-    contador_videos = pexels(query, buscar_imagens, tempo_total_desejado * 0.8, tempo_maximo_por_video)
+        print(f"\n=== Processando arquivo: {arquivo} ===")
 
-    print(f"\n=== Testando API do Pixabay com query: '{query}' ===")
-    pixabay(query, buscar_imagens, tempo_total_desejado * 0.2, tempo_maximo_por_video, contador_videos)
+        google_voice = GoogleVoice()
+        tempo_total = google_voice.processar_roteiro(roteiro_path)
+        print(f"Tempo total de áudio gerado: {tempo_total:.2f} segundos")
+
+        query = encontrar_search(roteiro_path)
+        buscar_imagens = False
+        tempo_total_desejado = math.ceil(tempo_total / 10) * 10
+        tempo_maximo_por_video = 10
+
+        print(f"=== Testando API do Pexels com query: '{query}' ===")
+        contador_videos = pexels(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video)
+
+        # print(f"\n=== Testando API do Pixabay com query: '{query}' ===")
+        # pixabay(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video, contador_videos)
+
+        videomaker = VideoMaker()
+        videomaker.criar_video("downloads", "musics/musica.mp3", tempo_total_desejado=tempo_total_desejado)
+        videomaker.adicionar_texto_e_audio("output/final_video.mp4", output_file=f"{arquivo}.mp4", script_file=roteiro_path)
     
-    videomaker = VideoMaker()
-    videomaker.criar_video("downloads", "musics/musica.mp3", tempo_total_desejado=tempo_total_desejado)
-    videomaker.adicionar_texto_e_audio("output/final_video.mp4")
+def encontrar_search(arquivo):
+    with open(arquivo, 'r', encoding='utf-8') as f:
+        for linha in f:
+            if linha.startswith("SEARCH:"):
+                return linha.split("SEARCH:", 1)[1].strip()
+    return None
 
 def pixabay(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video, contador_videos=0):
     pixabay = PixabayAPI(PIXABAY_API_KEY)
