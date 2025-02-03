@@ -9,9 +9,19 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from dotenv import load_dotenv
+
+# Carrega as variáveis de ambiente do arquivo .env
+load_dotenv()
+
+# Recupera as variáveis necessárias
+CHROMEDRIVER_PATH = os.getenv("CHROMEDRIVER_PATH")
+USER_DATA_DIR = os.getenv("USER_DATA_DIR")
+# Se desejar, você pode também definir o perfil via variável; caso contrário, "Default" é o padrão.
+PROFILE_DIRECTORY = os.getenv("PROFILE_DIRECTORY", "Default")
 
 class TikTokUploader:
-    def __init__(self, driver_path, user_data_dir, profile_directory, headless=False):
+    def __init__(self, driver_path = CHROMEDRIVER_PATH, user_data_dir = USER_DATA_DIR, profile_directory = PROFILE_DIRECTORY, headless=False):
         """
         Inicializa a classe TikTokUploader.
         
@@ -45,7 +55,7 @@ class TikTokUploader:
         # Aguarda alguns segundos para a página carregar completamente
         time.sleep(5)
 
-    def upload_video(self, video_file, title, description, scheduled_time=None):
+    def upload_video(self, video_file, description, scheduled_time=None):
         """
         Realiza o upload de um vídeo no TikTok Studio seguindo os passos:
           1. Seleciona o vídeo através do input file;
@@ -123,7 +133,6 @@ class TikTokUploader:
                 day = str(int(scheduled_time.strftime("%d")))
                 
                 # -- Configurando a data --
-                # Seleciona o input de data que contenha "-" e não contenha ":".
                 date_input = WebDriverWait(self.driver, 30).until(
                     EC.element_to_be_clickable(
                         (By.XPATH, "//input[contains(@class, 'TUXTextInputCore-input') and contains(@value, '-') and not(contains(@value, ':'))]")
@@ -133,7 +142,6 @@ class TikTokUploader:
                 print("Campo de data aberto!")
                 time.sleep(1)  # Aguarda o dropdown do calendário abrir
                 
-                # Seleciona o dia desejado no calendário.
                 date_cell = WebDriverWait(self.driver, 30).until(
                     EC.element_to_be_clickable(
                         (By.XPATH, f"//div[contains(@class, 'calendar-wrapper')]//span[contains(@class, 'day') and normalize-space(text())='{day}']")
@@ -143,7 +151,6 @@ class TikTokUploader:
                 print("Data selecionada:", date_str)
                 
                 # -- Configurando a hora --
-                # Seleciona o input de hora: procura o input que contenha ":" no valor.
                 time_input = WebDriverWait(self.driver, 30).until(
                     EC.element_to_be_clickable(
                         (By.XPATH, "//input[contains(@class, 'TUXTextInputCore-input') and contains(@value, ':')]")
@@ -153,6 +160,7 @@ class TikTokUploader:
                 print("Campo de hora aberto!")
                 time.sleep(1)  # Aguarda o dropdown de horários abrir
                 print(f"Selecionando hora {hour_str}:{minute_str}...")
+                
                 # Seleciona a opção de hora na primeira lista (lado esquerdo)
                 hour_option = WebDriverWait(self.driver, 30).until(
                     EC.element_to_be_clickable(
@@ -162,7 +170,7 @@ class TikTokUploader:
                 hour_option.click()
                 print("Hora selecionada:", hour_str)
                 time.sleep(1)
-
+                
                 # Seleciona a opção de minuto na segunda lista (lado direito)
                 minute_option = WebDriverWait(self.driver, 30).until(
                     EC.element_to_be_clickable(
@@ -198,25 +206,35 @@ class TikTokUploader:
         if self.driver:
             self.driver.quit()
 
+    def upload_video_to_tiktok(self, video_file, description, scheduled_time):
+        """
+        Função para realizar o upload de um vídeo no TikTok Studio.
+        
+        :param video_file: Caminho do arquivo de vídeo.
+        :param description: Descrição (ou legenda) do vídeo.
+        :param scheduled_time: Objeto datetime com a data/hora para agendamento.
+        :return: True se o upload foi realizado com sucesso, False caso contrário.
+        """
+        
+        self.start_browser()
+        # Note que o título não é utilizado (não há campo para título) e é apenas passado para compatibilidade.
+        success = self.upload_video(video_file, description=description, scheduled_time=scheduled_time)
+        self.close_browser()
+        return success
 
-# Exemplo de uso:
+# Exemplo de uso quando o módulo é executado diretamente:
 if __name__ == '__main__':
     # Configure os parâmetros:
-    CHROMEDRIVER_PATH = r"E:\chromedriver-win64\chromedriver-win64\chromedriver.exe"
-    USER_DATA_DIR = r"C:\Users\Gusta\AppData\Local\Google\Chrome\User Data"
-    PROFILE_DIRECTORY = "Default"
     VIDEO_FILE = os.path.join("output", "final_video.mp4")
-    TITLE = "Meu vídeo TikTok"  # Este parâmetro não será utilizado, pois não há campo para título.
+    TITLE = "Meu vídeo TikTok"  # Parâmetro não utilizado
     DESCRIPTION = "Descrição do vídeo com hashtags e outros detalhes."
-    # Exemplo: agendar para 5 de fevereiro de 2025 às 10:30.
+    # Exemplo: agendar para 6 de fevereiro de 2025 às 18:35.
     SCHEDULED_TIME = datetime.datetime(2025, 2, 6, 18, 35)
-
-    uploader = TikTokUploader(CHROMEDRIVER_PATH, USER_DATA_DIR, PROFILE_DIRECTORY, headless=False)
-    uploader.start_browser()
     
-    success = uploader.upload_video(VIDEO_FILE, TITLE, DESCRIPTION, scheduled_time=SCHEDULED_TIME)
-    if success:
+    tiktok = TikTokUploader();
+
+    result = tiktok.upload_video_to_tiktok(VIDEO_FILE, DESCRIPTION, SCHEDULED_TIME)
+    if result:
         print("Upload agendado com sucesso!")
     else:
         print("Falha no upload.")
-    uploader.close_browser()

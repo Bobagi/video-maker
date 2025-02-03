@@ -9,6 +9,7 @@ from src.pixabay import PixabayAPI
 from src.googleVoice import GoogleVoice
 from src.videomaker import VideoMaker
 from src.uploadYoutube import YouTubeUploader
+from src.uploadTiktok import TikTokUploader
 
 load_dotenv()
 
@@ -64,21 +65,33 @@ def main():
         
         titulo = find_value(roteiro_path, "TÍTULO:")
         hashtags = find_value(roteiro_path, "HASHTAGS:")
+        video_path = os.path.join("output", f"{arquivo}.mp4")
 
         upload_success = youtube.upload_single_video(
-            os.path.join("output", f"{arquivo}.mp4"),
+            video_path,
             titulo,
             hashtags,
             scheduled_time=next_schedule  # Passa o horário calculado
         )
         
         if upload_success:
-            print("Upload realizado com sucesso!")
+            print("Upload realizado com sucesso no YouTube!")
             SCRIPT_BACKUP_PATH = "script_backup"
             os.makedirs(SCRIPT_BACKUP_PATH, exist_ok=True)
             shutil.move(roteiro_path, os.path.join(SCRIPT_BACKUP_PATH, arquivo))
         else:
             print("Houve um erro no upload.")
+            
+        tiktok = TikTokUploader()
+        description_tiktok = f"{titulo.strip()}\n{hashtags.strip()}"
+            
+        # next_schedule = datetime.datetime(2025, 2, 6, 18, 35)
+
+        sucesso_tiktok = tiktok.upload_video_to_tiktok(video_path, description_tiktok, next_schedule)
+        if sucesso_tiktok:
+            print("Upload agendado com sucesso no TikTok!")
+        else:
+            print("Falha no upload.")
     
 def find_value(arquivo, termo):
     with open(arquivo, 'r', encoding='utf-8') as f:
