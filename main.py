@@ -76,9 +76,6 @@ def main():
         
         if upload_success:
             print("Upload realizado com sucesso no YouTube!")
-            SCRIPT_BACKUP_PATH = "script_backup"
-            os.makedirs(SCRIPT_BACKUP_PATH, exist_ok=True)
-            shutil.move(roteiro_path, os.path.join(SCRIPT_BACKUP_PATH, arquivo))
         else:
             print("Houve um erro no upload.")
             
@@ -92,6 +89,10 @@ def main():
             print("Upload agendado com sucesso no TikTok!")
         else:
             print("Falha no upload.")
+            
+        SCRIPT_BACKUP_PATH = "script_backup"
+        os.makedirs(SCRIPT_BACKUP_PATH, exist_ok=True)
+        shutil.move(roteiro_path, os.path.join(SCRIPT_BACKUP_PATH, arquivo))
     
 def find_value(arquivo, termo):
     with open(arquivo, 'r', encoding='utf-8') as f:
