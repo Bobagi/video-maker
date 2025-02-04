@@ -30,6 +30,7 @@ class TikTokUploader:
         :param profile_directory: Nome do perfil a ser usado (ex.: "Default" ou "Profile 1").
         :param headless: Se True, roda o Chrome em modo headless.
         """
+        print(f"driver_path: {driver_path}")
         self.driver_path = driver_path
         self.user_data_dir = user_data_dir
         self.profile_directory = profile_directory

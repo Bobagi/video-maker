@@ -10,6 +10,7 @@ from src.googleVoice import GoogleVoice
 from src.videomaker import VideoMaker
 from src.uploadYoutube import YouTubeUploader
 from src.uploadTiktok import TikTokUploader
+from src.roteiroProcessor import RoteiroProcessor
 
 load_dotenv()
 
@@ -19,46 +20,107 @@ DOWNLOAD_DIR = os.getenv("DOWNLOAD_DIR", "downloads")
 SCRIPT_PATH = os.getenv("SCRIPT_PATH", "scripts")
 
 def main():
+    # print(f"\n=== 🟦 Autenticando YouTube ===\n")
+    # youtube = YouTubeUploader()
+    # youtube.authenticate()
+    # print(f"\n=== ✅ YouTube autenticado ===\n")
+    
+    # print(f"\n=== ⏲️ Buscando ultimo video agendado no YouTube ===\n")
+    # last_date = youtube.get_last_scheduled_video_date()
+    # if last_date:
+    #     print("📅 O último vídeo agendado está marcado para:", last_date)
+    #     base_time = last_date + datetime.timedelta(seconds=1)
+    # else:
+    #     print("📅 Nenhum vídeo agendado foi encontrado.")
+    #     base_time = None 
+        
+    # print(f"\n=== ⬆️ Iniciando upload para o YouTube ===\n")
+    # next_schedule = youtube.generate_schedule(1, start_time=base_time)[0]
+    # # upload_success = youtube.upload_single_video(
+    # #     os.path.join("output", "CuriosidadesSobreAHistoriaDosVideogames.txt.mp4"),
+    # #     "titulo",
+    # #     "hashtags",
+    # #     scheduled_time=next_schedule  # Passa o horário calculado
+    # # )
+    
+    # # if upload_success:
+    # #     print("⬆️✅ Upload realizado com sucesso no YouTube!")
+    # # else:
+    # #     print("⬆️🆘 Houve um erro no upload.")
+        
+    # # os.environ.pop("webdriver.chrome.driver", None)
+    # print(f"\n=== ⬆️ Iniciando upload para o Tiktok ===\n")
+    # # testCHROMEDRIVER_PATH = r"E:\chromedriver-win64\chromedriver-win64\chromedriver.exe"
+    # tiktok = TikTokUploader()
+    # description_tiktok = "Titulo Hashtags"
+        
+    # # next_schedule = datetime.datetime(2025, 2, 6, 18, 35)
+
+    # sucesso_tiktok = tiktok.upload_video_to_tiktok(os.path.join("output", "CuriosidadesSobreAHistoriaDosVideogames.txt.mp4"), description_tiktok, next_schedule)
+    # if sucesso_tiktok:
+    #     print("⬆️✅ Upload agendado com sucesso no TikTok!")
+    # else:
+    #     print("⬆️🆘 Falha no upload.")
+        
+    
+    # return
+    
     if not os.path.exists(SCRIPT_PATH):
         print(f"Erro: A pasta '${SCRIPT_PATH}' não foi encontrada.")
         sys.exit(1)
+        
+    print("📰 Spliting scripts")
+    processor = RoteiroProcessor(os.path.join("scripts", "roteiros_completos.txt"))
+    processor.processar()
+    processor.exportar("scripts")
+    processor.deletar_arquivo_original()
+    print("📰 Scripts done\n")
 
+    print("📹 Starting video generating\n\n")
     for arquivo in os.listdir(SCRIPT_PATH):
         roteiro_path = os.path.join(SCRIPT_PATH, arquivo)
 
         if not os.path.isfile(roteiro_path):
             continue
 
-        print(f"\n=== Processando arquivo: {arquivo} ===")
+        print(f"\n=== 🔊 Gerando audios para o arquivo: {arquivo} ===")
 
         google_voice = GoogleVoice()
         tempo_total = google_voice.processar_roteiro(roteiro_path)
-        print(f"Tempo total de áudio gerado: {tempo_total:.2f} segundos")
+        print(f"\n=== 🔊 Tempo total de áudio gerado: {tempo_total:.2f} segundos ===\n")
 
         query = find_value(roteiro_path, "SEARCH:")
         buscar_imagens = False
         tempo_total_desejado = math.ceil(tempo_total / 10) * 10
         tempo_maximo_por_video = 10
 
-        print(f"=== Testando API do Pexels com query: '{query}' ===")
+        print(f"\n=== 📼 Buscando videos na Pexels: '{query}' ===\n")
         contador_videos = pexels(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video)
-
+        print(f"\n=== 📼 Busca por videos na Pexels finalizada! ===\n")
         # print(f"\n=== Testando API do Pixabay com query: '{query}' ===")
         # pixabay(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video, contador_videos)
 
+        print(f"\n=== 📼 Gerando vídeo base ===\n")
         videomaker = VideoMaker()
         videomaker.criar_video("downloads", os.path.join("musics", "musica.mp3"), tempo_total_desejado=tempo_total_desejado)
-        videomaker.adicionar_texto_e_audio(os.path.join("output", "final_video.mp4"), output_file=f"{arquivo}.mp4", script_file=roteiro_path)
+        print(f"\n=== 📼 Vídeo base gerado ===\n")
         
+        print(f"\n=== 📼 Gerando vídeo comvoz e texto ===\n")
+        videomaker.adicionar_texto_e_audio(os.path.join("output", "final_video.mp4"), output_file=f"{arquivo}.mp4", script_file=roteiro_path)
+        print(f"\n=== 📼 Vídeo com voz e texto gerado ===\n")
+        
+        print(f"\n=== 🟦 Autenticando YouTube ===\n")
         youtube = YouTubeUploader()
         youtube.authenticate()
+        print(f"\n=== ✅ YouTube autenticado ===\n")
         
+        print(f"\n=== ⏲️ Buscando ultimo video agendado no YouTube ===\n")
         last_date = youtube.get_last_scheduled_video_date()
         if last_date:
-            print("O último vídeo agendado está marcado para:", last_date)
+            print("📅 O último vídeo agendado está marcado para:", last_date)
             base_time = last_date + datetime.timedelta(seconds=1)
         else:
-            print("Nenhum vídeo agendado foi encontrado.")
+            print("📅 Nenhum vídeo agendado foi encontrado.")
             base_time = None 
             
         next_schedule = youtube.generate_schedule(1, start_time=base_time)[0]
@@ -67,6 +129,7 @@ def main():
         hashtags = find_value(roteiro_path, "HASHTAGS:")
         video_path = os.path.join("output", f"{arquivo}.mp4")
 
+        print(f"\n=== ⬆️ Iniciando upload para o YouTube ===\n")
         upload_success = youtube.upload_single_video(
             video_path,
             titulo,
@@ -75,20 +138,22 @@ def main():
         )
         
         if upload_success:
-            print("Upload realizado com sucesso no YouTube!")
+            print("⬆️✅ Upload realizado com sucesso no YouTube!")
         else:
-            print("Houve um erro no upload.")
+            print("⬆️🆘 Houve um erro no upload.")
             
-        tiktok = TikTokUploader()
+        print(f"\n=== ⬆️ Iniciando upload para o Tiktok ===\n")
+        testCHROMEDRIVER_PATH = r"E:\chromedriver-win64\chromedriver-win64\chromedriver.exe" # Temp solution REMOVE
+        tiktok = TikTokUploader(driver_path=testCHROMEDRIVER_PATH)
         description_tiktok = f"{titulo.strip()}\n{hashtags.strip()}"
             
         # next_schedule = datetime.datetime(2025, 2, 6, 18, 35)
 
         sucesso_tiktok = tiktok.upload_video_to_tiktok(video_path, description_tiktok, next_schedule)
         if sucesso_tiktok:
-            print("Upload agendado com sucesso no TikTok!")
+            print("⬆️✅ Upload agendado com sucesso no TikTok!")
         else:
-            print("Falha no upload.")
+            print("⬆️🆘 Falha no upload.")
             
         SCRIPT_BACKUP_PATH = "script_backup"
         os.makedirs(SCRIPT_BACKUP_PATH, exist_ok=True)
@@ -204,7 +269,6 @@ def pexels(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video, 
         pexels.baixar_arquivo(url, destino)
         
     return contador_videos
-
 
 if __name__ == "__main__":
     main()

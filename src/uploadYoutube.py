@@ -216,8 +216,9 @@ class YouTubeUploader:
         if sucesso:
             backup_path = os.path.join(self.backup_dir, os.path.basename(video_file))
             try:
-                shutil.move(video_file, backup_path)
-                print(f"Vídeo movido para backup: {backup_path}")
+                # shutil.move(video_file, backup_path)
+                # print(f"Vídeo movido para backup: {backup_path}")
+                print(f"YouTube upload done")
             except Exception as e:
                 print("Erro ao mover o arquivo para backup:", e)
         return sucesso
@@ -236,12 +237,18 @@ class YouTubeUploader:
         # Converte o horário agendado para UTC no formato ISO 8601 (RFC 3339)
         scheduled_time_utc = scheduled_time.astimezone(datetime.timezone.utc).isoformat()
         
+        # Extrai as hashtags da descrição (remove o '#' e adiciona à lista)
+        hashtags = [tag[1:] for tag in description.split() if tag.startswith('#')]
+
+        # Combina as tags existentes com as novas hashtags
+        tags = ["Shorts", "Automated Upload"] + hashtags
+        
         body = {
             "snippet": {
                 "title": title,
                 "description": description,
-                "tags": ["Shorts", "Automated Upload"],
-                "categoryId": "22"
+                "tags": tags,
+                "categoryId": "24" # Entertainment
             },
             "status": {
                 "privacyStatus": "private",
