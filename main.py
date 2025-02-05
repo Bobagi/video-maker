@@ -20,50 +20,6 @@ DOWNLOAD_DIR = os.getenv("DOWNLOAD_DIR", "downloads")
 SCRIPT_PATH = os.getenv("SCRIPT_PATH", "scripts")
 
 def main():
-    # print(f"\n=== 🟦 Autenticando YouTube ===\n")
-    # youtube = YouTubeUploader()
-    # youtube.authenticate()
-    # print(f"\n=== ✅ YouTube autenticado ===\n")
-    
-    # print(f"\n=== ⏲️ Buscando ultimo video agendado no YouTube ===\n")
-    # last_date = youtube.get_last_scheduled_video_date()
-    # if last_date:
-    #     print("📅 O último vídeo agendado está marcado para:", last_date)
-    #     base_time = last_date + datetime.timedelta(seconds=1)
-    # else:
-    #     print("📅 Nenhum vídeo agendado foi encontrado.")
-    #     base_time = None 
-        
-    # print(f"\n=== ⬆️ Iniciando upload para o YouTube ===\n")
-    # next_schedule = youtube.generate_schedule(1, start_time=base_time)[0]
-    # # upload_success = youtube.upload_single_video(
-    # #     os.path.join("output", "CuriosidadesSobreAHistoriaDosVideogames.txt.mp4"),
-    # #     "titulo",
-    # #     "hashtags",
-    # #     scheduled_time=next_schedule  # Passa o horário calculado
-    # # )
-    
-    # # if upload_success:
-    # #     print("⬆️✅ Upload realizado com sucesso no YouTube!")
-    # # else:
-    # #     print("⬆️🆘 Houve um erro no upload.")
-        
-    # # os.environ.pop("webdriver.chrome.driver", None)
-    # print(f"\n=== ⬆️ Iniciando upload para o Tiktok ===\n")
-    # # testCHROMEDRIVER_PATH = r"E:\chromedriver-win64\chromedriver-win64\chromedriver.exe"
-    # tiktok = TikTokUploader()
-    # description_tiktok = "Titulo Hashtags"
-        
-    # # next_schedule = datetime.datetime(2025, 2, 6, 18, 35)
-
-    # sucesso_tiktok = tiktok.upload_video_to_tiktok(os.path.join("output", "CuriosidadesSobreAHistoriaDosVideogames.txt.mp4"), description_tiktok, next_schedule)
-    # if sucesso_tiktok:
-    #     print("⬆️✅ Upload agendado com sucesso no TikTok!")
-    # else:
-    #     print("⬆️🆘 Falha no upload.")
-        
-    
-    # return
     
     if not os.path.exists(SCRIPT_PATH):
         print(f"Erro: A pasta '${SCRIPT_PATH}' não foi encontrada.")
@@ -142,9 +98,8 @@ def main():
         else:
             print("⬆️🆘 Houve um erro no upload.")
             
-        print(f"\n=== ⬆️ Iniciando upload para o Tiktok ===\n")
-        testCHROMEDRIVER_PATH = r"E:\chromedriver-win64\chromedriver-win64\chromedriver.exe" # Temp solution REMOVE
-        tiktok = TikTokUploader(driver_path=testCHROMEDRIVER_PATH)
+        print(f"\n=== ⬆️ Iniciando upload para o Tiktok ===\n")        
+        tiktok = TikTokUploader()
         description_tiktok = f"{titulo.strip()}\n{hashtags.strip()}"
             
         # next_schedule = datetime.datetime(2025, 2, 6, 18, 35)

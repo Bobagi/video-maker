@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import os
 import time
 import datetime
@@ -15,13 +12,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Recupera as variáveis necessárias
-CHROMEDRIVER_PATH = os.getenv("CHROMEDRIVER_PATH")
+CHROME_DRIVER_PATH = os.getenv("CHROME_DRIVER_PATH")
 USER_DATA_DIR = os.getenv("USER_DATA_DIR")
 # Se desejar, você pode também definir o perfil via variável; caso contrário, "Default" é o padrão.
 PROFILE_DIRECTORY = os.getenv("PROFILE_DIRECTORY", "Default")
 
 class TikTokUploader:
-    def __init__(self, driver_path = CHROMEDRIVER_PATH, user_data_dir = USER_DATA_DIR, profile_directory = PROFILE_DIRECTORY, headless=False):
+    def __init__(self, driver_path = CHROME_DRIVER_PATH, user_data_dir = USER_DATA_DIR, profile_directory = PROFILE_DIRECTORY, headless=False):
         """
         Inicializa a classe TikTokUploader.
         
@@ -30,7 +27,6 @@ class TikTokUploader:
         :param profile_directory: Nome do perfil a ser usado (ex.: "Default" ou "Profile 1").
         :param headless: Se True, roda o Chrome em modo headless.
         """
-        print(f"driver_path: {driver_path}")
         self.driver_path = driver_path
         self.user_data_dir = user_data_dir
         self.profile_directory = profile_directory

@@ -241,7 +241,8 @@ class YouTubeUploader:
         hashtags = [tag[1:] for tag in description.split() if tag.startswith('#')]
 
         # Combina as tags existentes com as novas hashtags
-        tags = ["Shorts", "Automated Upload"] + hashtags
+        # tags = ["Shorts", "Automated Upload"] + hashtags
+        tags = hashtags
         
         body = {
             "snippet": {
