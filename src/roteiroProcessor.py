@@ -85,7 +85,7 @@ class RoteiroProcessor:
 
 # Exemplo de uso
 if __name__ == "__main__":
-    processor = RoteiroProcessor(os.path.join("scripts", "roteiros_completos.txt"))
+    processor = RoteiroProcessor(os.path.join("scripts", "roteiro.txt"))
     processor.processar()
     processor.exportar("scripts")
     processor.deletar_arquivo_original()

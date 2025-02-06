@@ -26,7 +26,7 @@ def main():
         sys.exit(1)
         
     print("📰 Spliting scripts")
-    processor = RoteiroProcessor(os.path.join("scripts", "roteiros_completos.txt"))
+    processor = RoteiroProcessor(os.path.join("scripts", "roteiro.txt"))
     processor.processar()
     processor.exportar("scripts")
     processor.deletar_arquivo_original()
@@ -104,7 +104,7 @@ def main():
             
         # next_schedule = datetime.datetime(2025, 2, 6, 18, 35)
 
-        sucesso_tiktok = tiktok.upload_video_to_tiktok(video_path, description_tiktok, next_schedule)
+        sucesso_tiktok = tiktok.upload_video_to_tiktok(video_file=video_path, description=description_tiktok, scheduled_time=next_schedule)
         if sucesso_tiktok:
             print("⬆️✅ Upload agendado com sucesso no TikTok!")
         else:
@@ -113,6 +113,11 @@ def main():
         SCRIPT_BACKUP_PATH = "script_backup"
         os.makedirs(SCRIPT_BACKUP_PATH, exist_ok=True)
         shutil.move(roteiro_path, os.path.join(SCRIPT_BACKUP_PATH, arquivo))
+        
+    # Move videos from outout to output_backup
+    for arquivo in os.listdir("output"):
+        video_path = os.path.join("output", arquivo)
+        shutil.move(video_path, os.path.join("output_backup", arquivo))
     
 def find_value(arquivo, termo):
     with open(arquivo, 'r', encoding='utf-8') as f:

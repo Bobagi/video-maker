@@ -14,14 +14,12 @@ load_dotenv()
 # Recupera as variáveis necessárias
 CHROME_DRIVER_PATH = os.getenv("CHROME_DRIVER_PATH")
 USER_DATA_DIR = os.getenv("USER_DATA_DIR")
-# Se desejar, você pode também definir o perfil via variável; caso contrário, "Default" é o padrão.
 PROFILE_DIRECTORY = os.getenv("PROFILE_DIRECTORY", "Default")
 
 class TikTokUploader:
-    def __init__(self, driver_path = CHROME_DRIVER_PATH, user_data_dir = USER_DATA_DIR, profile_directory = PROFILE_DIRECTORY, headless=False):
+    def __init__(self, driver_path=CHROME_DRIVER_PATH, user_data_dir=USER_DATA_DIR, profile_directory=PROFILE_DIRECTORY, headless=False):
         """
         Inicializa a classe TikTokUploader.
-        
         :param driver_path: Caminho para o executável do ChromeDriver.
         :param user_data_dir: Caminho para o diretório de dados do usuário do Chrome.
         :param profile_directory: Nome do perfil a ser usado (ex.: "Default" ou "Profile 1").
@@ -49,33 +47,25 @@ class TikTokUploader:
         """Navega diretamente para a página de upload do TikTok Studio."""
         url = "https://www.tiktok.com/tiktokstudio/upload?from=creator_center"
         self.driver.get(url)
-        # Aguarda alguns segundos para a página carregar completamente
-        time.sleep(5)
+        time.sleep(5)  # Aguarda a página carregar completamente
 
     def upload_video(self, video_file, description, scheduled_time=None):
         """
         Realiza o upload de um vídeo no TikTok Studio seguindo os passos:
-          1. Seleciona o vídeo através do input file;
+          1. Seleciona o vídeo via input file;
           2. Aguarda o processamento do upload;
-          3. Insere a descrição no campo abaixo da label "Descrição";
-          4. Seleciona o radiobutton "Programação" (na seção "Quando publicar");
-          5. Se fornecido, configura os campos de data e hora através de cliques nos inputs readonly e seleção da opção desejada;
-          6. Clica no botão "Programação" para finalizar o agendamento.
-        
-        :param video_file: Caminho do arquivo de vídeo.
-        :param title: Título do vídeo (não utilizado, pois não há campo específico para título).
-        :param description: Descrição (ou legenda) do vídeo.
-        :param scheduled_time: (Opcional) objeto datetime com a data/hora para agendamento.
-        :return: True se o upload foi realizado com sucesso, False caso contrário.
+          3. Insere a descrição;
+          4. Seleciona o radiobutton "Programação";
+          5. Se fornecido, configura data e hora;
+          6. Clica no botão "Programação" para finalizar.
         """
         if not os.path.exists(video_file):
             print(f"Arquivo de vídeo não encontrado: {video_file}")
             return False
 
-        # Abre a página de upload já logada
         self.open_upload_page()
 
-        # 1. Seleciona o vídeo via input file (mesmo que oculto)
+        # 1. Seleciona o vídeo via input file
         try:
             file_input = WebDriverWait(self.driver, 20).until(
                 EC.presence_of_element_located((By.XPATH, "//input[@type='file']"))
@@ -92,13 +82,10 @@ class TikTokUploader:
 
         # 3. Insere a descrição
         try:
-            # Localiza o campo de descrição (container contenteditable) abaixo da label "Descrição"
             desc_field = WebDriverWait(self.driver, 30).until(
                 EC.presence_of_element_located((By.XPATH, "//div[@data-e2e='caption_container']//div[@contenteditable='true']"))
             )
-            # Limpa o conteúdo existente via JavaScript
             self.driver.execute_script("arguments[0].innerText = '';", desc_field)
-            # Insere a descrição desejada
             self.driver.execute_script("arguments[0].innerText = arguments[1];", desc_field, description)
             print("Descrição inserida.")
         except Exception as e:
@@ -116,71 +103,90 @@ class TikTokUploader:
             print("Erro ao selecionar o radiobutton 'Programação':", e)
             return False
 
-        # 5. Se houver agendamento, configura os campos de data e hora.
+        # 5. Configuração de data e hora (caso agendamento seja solicitado)
         if scheduled_time:
             try:
-                # Converte scheduled_time para strings:
-                # Data: YYYY-MM-DD (ex.: "2025-02-05")
-                # Hora: HH (ex.: "10")
-                # Minuto: MM (ex.: "30")
+                # Formata os valores desejados
                 date_str = scheduled_time.strftime("%Y-%m-%d")
                 hour_str = scheduled_time.strftime("%H")
                 minute_str = scheduled_time.strftime("%M")
-                # Para seleção do dia, remova o zero à esquerda, se houver
-                day = str(int(scheduled_time.strftime("%d")))
-                
-                # -- Configurando a data --
+                day = str(int(scheduled_time.strftime("%d")))  # remove zero à esquerda
+
+                # --- Seleção da Data ---
                 date_input = WebDriverWait(self.driver, 30).until(
                     EC.element_to_be_clickable(
                         (By.XPATH, "//input[contains(@class, 'TUXTextInputCore-input') and contains(@value, '-') and not(contains(@value, ':'))]")
                     )
                 )
                 date_input.click()
-                print("Campo de data aberto!")
+                print("\nCampo de data aberto!")
                 time.sleep(1)  # Aguarda o dropdown do calendário abrir
-                
+
                 date_cell = WebDriverWait(self.driver, 30).until(
                     EC.element_to_be_clickable(
                         (By.XPATH, f"//div[contains(@class, 'calendar-wrapper')]//span[contains(@class, 'day') and normalize-space(text())='{day}']")
                     )
                 )
                 date_cell.click()
-                print("Data selecionada:", date_str)
-                
-                # -- Configurando a hora --
+                print("\nData selecionada:", date_str)
+
+                # --- Seleção de Hora e Minuto ---
                 time_input = WebDriverWait(self.driver, 30).until(
                     EC.element_to_be_clickable(
                         (By.XPATH, "//input[contains(@class, 'TUXTextInputCore-input') and contains(@value, ':')]")
                     )
                 )
                 time_input.click()
-                print("Campo de hora aberto!")
-                time.sleep(1)  # Aguarda o dropdown de horários abrir
-                print(f"Selecionando hora {hour_str}:{minute_str}...")
-                
-                # Seleciona a opção de hora na primeira lista (lado esquerdo)
-                hour_option = WebDriverWait(self.driver, 30).until(
-                    EC.element_to_be_clickable(
-                        (By.XPATH, f"(//div[contains(@class, 'tiktok-timepicker-time-scroll-container')])[1]//span[contains(@class, 'tiktok-timepicker-option-text') and contains(@class, 'tiktok-timepicker-left') and normalize-space(text())='{hour_str}']")
-                    )
+                print("\nDropdown de hora aberto!")
+                # Aguarda que o container do time picker esteja visível (aumentei para 15 segundos)
+                WebDriverWait(self.driver, 5).until(
+                    EC.visibility_of_element_located((By.XPATH, "//div[contains(@class, 'tiktok-timepicker-time-picker-container')]"))
                 )
-                hour_option.click()
+                print("Dropdown de hora visível!")
+                time.sleep(2)
+
+                # Seleciona a hora desejada
+                hour_option_xpath = f"(//div[contains(@class, 'tiktok-timepicker-time-scroll-container')])[1]//span[normalize-space(.)='{hour_str}']"
+                try:
+                    hour_option = self.driver.find_element(By.XPATH, hour_option_xpath)
+                except Exception as e:
+                    print("Elemento de hora não encontrado:", e)
+                    return False
+                self.driver.execute_script("arguments[0].scrollIntoView(true);", hour_option)
+                self.driver.execute_script("arguments[0].click();", hour_option)
                 print("Hora selecionada:", hour_str)
-                time.sleep(1)
-                
-                # Seleciona a opção de minuto na segunda lista (lado direito)
-                minute_option = WebDriverWait(self.driver, 30).until(
-                    EC.element_to_be_clickable(
-                        (By.XPATH, f"(//div[contains(@class, 'tiktok-timepicker-time-scroll-container')])[2]//span[contains(@class, 'tiktok-timepicker-option-text') and contains(@class, 'tiktok-timepicker-right') and normalize-space(text())='{minute_str}']")
-                    )
-                )
-                minute_option.click()
+                time.sleep(2)
+
+                # Seleciona o minuto desejado
+                minute_option_xpath = f"(//div[contains(@class, 'tiktok-timepicker-time-scroll-container')])[2]//span[normalize-space(.)='{minute_str}']"
+                try:
+                    minute_option = self.driver.find_element(By.XPATH, minute_option_xpath)
+                except Exception as e:
+                    print("Elemento de minuto não encontrado:", e)
+                    return False
+                self.driver.execute_script("arguments[0].scrollIntoView(true);", minute_option)
+                self.driver.execute_script("arguments[0].click();", minute_option)
                 print("Minuto selecionado:", minute_str)
+                time.sleep(2)
+
+                # Verifica se as seleções foram aplicadas
+                active_hour = self.driver.find_element(By.XPATH, "(//div[contains(@class, 'tiktok-timepicker-time-scroll-container')])[1]//span[contains(@class, 'tiktok-timepicker-is-active')]")
+                active_minute = self.driver.find_element(By.XPATH, "(//div[contains(@class, 'tiktok-timepicker-time-scroll-container')])[2]//span[contains(@class, 'tiktok-timepicker-is-active')]")
+                if active_hour.text.strip() != hour_str:
+                    print(f"\n🆘 Erro: A hora ativa ({active_hour.text.strip()}) não corresponde à hora desejada ({hour_str}).")
+                    return False
+                if active_minute.text.strip() != minute_str:
+                    print(f"\n🆘 Erro: O minuto ativo ({active_minute.text.strip()}) não corresponde ao minuto desejado ({minute_str}).")
+                    return False
+
+                # Confirma a seleção clicando fora do dropdown
+                self.driver.execute_script("document.body.click();")
+                time.sleep(1)
             except Exception as e:
-                print("Erro ao configurar data e hora:", e)
+                print("\n🆘 Erro ao configurar data e hora:", e)
                 return False
         else:
-            print("Agendamento não solicitado. Prosseguindo sem agendar.")
+            print("\nAgendamento não solicitado. Prosseguindo sem agendar.")
 
         # 6. Clica no botão "Programação" para finalizar o upload agendado
         try:
@@ -206,30 +212,24 @@ class TikTokUploader:
     def upload_video_to_tiktok(self, video_file, description, scheduled_time):
         """
         Função para realizar o upload de um vídeo no TikTok Studio.
-        
         :param video_file: Caminho do arquivo de vídeo.
-        :param description: Descrição (ou legenda) do vídeo.
+        :param description: Descrição do vídeo.
         :param scheduled_time: Objeto datetime com a data/hora para agendamento.
         :return: True se o upload foi realizado com sucesso, False caso contrário.
         """
-        
         self.start_browser()
-        # Note que o título não é utilizado (não há campo para título) e é apenas passado para compatibilidade.
         success = self.upload_video(video_file, description=description, scheduled_time=scheduled_time)
         self.close_browser()
         return success
 
 # Exemplo de uso quando o módulo é executado diretamente:
 if __name__ == '__main__':
-    # Configure os parâmetros:
     VIDEO_FILE = os.path.join("output", "final_video.mp4")
-    TITLE = "Meu vídeo TikTok"  # Parâmetro não utilizado
     DESCRIPTION = "Descrição do vídeo com hashtags e outros detalhes."
     # Exemplo: agendar para 6 de fevereiro de 2025 às 18:35.
     SCHEDULED_TIME = datetime.datetime(2025, 2, 6, 18, 35)
     
-    tiktok = TikTokUploader();
-
+    tiktok = TikTokUploader()
     result = tiktok.upload_video_to_tiktok(VIDEO_FILE, DESCRIPTION, SCHEDULED_TIME)
     if result:
         print("Upload agendado com sucesso!")
