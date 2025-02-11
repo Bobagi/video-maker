@@ -33,15 +33,20 @@ class TikTokUploader:
 
     def start_browser(self):
         """Inicia o navegador usando o perfil logado."""
-        options = webdriver.ChromeOptions()
-        options.add_argument(f"--user-data-dir={self.user_data_dir}")
-        options.add_argument(f"--profile-directory={self.profile_directory}")
-        if self.headless:
-            options.add_argument("--headless")
-        options.add_argument("--disable-notifications")
-        service = Service(self.driver_path)
-        self.driver = webdriver.Chrome(service=service, options=options)
-        self.driver.maximize_window()
+        try:
+            options = webdriver.ChromeOptions()
+            options.add_argument(f"--user-data-dir={self.user_data_dir}")
+            options.add_argument(f"--profile-directory={self.profile_directory}")
+            if self.headless:
+                options.add_argument("--headless")
+            options.add_argument("--disable-notifications")
+            service = Service(self.driver_path)
+            self.driver = webdriver.Chrome(service=service, options=options)
+            self.driver.maximize_window()
+            return True
+        except Exception as e:
+            print("Erro ao iniciar o navegador:", e)
+            return False
 
     def open_upload_page(self):
         """Navega diretamente para a página de upload do TikTok Studio."""

@@ -346,21 +346,77 @@ class YouTubeUploader:
         last_scheduled_date_local = last_scheduled_date.astimezone()
         return last_scheduled_date_local
 
-# Exemplo de teste: se este módulo for executado diretamente, realiza autenticação e testa a conexão.
+    def testar_ambiente(self):
+        """
+        Função de teste para verificar se o ambiente está configurado corretamente.
+        Realiza as seguintes verificações:
+          - Verifica se o arquivo client_secrets.json existe;
+          - Verifica se o diretório de output existe;
+          - Testa se o diretório de backup é gravável;
+          - Tenta autenticar e testar a conexão com a API do YouTube;
+          - Testa a geração de agendamentos para os uploads.
+        
+        Retorna True se todos os testes forem bem-sucedidos; caso contrário, retorna False.
+        """
+        # Verifica a existência do arquivo de credenciais
+        if not os.path.exists(self.client_secrets_file):
+            print("❌ Erro: Arquivo client_secrets.json não encontrado em:", self.client_secrets_file)
+            return False
+
+        # Verifica se o diretório de output existe
+        if not os.path.exists(self.output_dir):
+            print("❌ Erro: Diretório de output não encontrado em:", self.output_dir)
+            return False
+
+        # Testa se o diretório de backup é gravável
+        try:
+            teste_file = os.path.join(self.backup_dir, "teste.txt")
+            with open(teste_file, "w") as f:
+                f.write("teste")
+            os.remove(teste_file)
+        except Exception as e:
+            print("❌ Erro: Diretório de backup não é gravável:", e)
+            return False
+
+        # Testa a autenticação e conexão com a API
+        try:
+            self.authenticate()
+            self.test_connection()
+        except Exception as e:
+            print("❌ Erro durante autenticação ou teste de conexão:", e)
+            return False
+
+        # Testa a geração de agendamento de uploads
+        try:
+            schedule = self.generate_schedule(3)
+            if not schedule or len(schedule) != 3:
+                print("❌ Erro: Falha ao gerar agendamento de vídeos.")
+                return False
+            print("✅ Teste de agendamento concluído com sucesso. Horários gerados:")
+            for dt in schedule:
+                print("   -", dt)
+        except Exception as e:
+            print("❌ Erro ao testar geração de agendamento:", e)
+            return False
+
+        print("✅ Todos os testes do ambiente foram concluídos com sucesso.")
+        return True
+
+# Exemplo de teste: se este módulo for executado diretamente, realiza os testes de ambiente.
 if __name__ == '__main__':
     uploader = YouTubeUploader()
-    uploader.authenticate()    # Realiza a autenticação com a API
-    uploader.test_connection() # Testa a conexão (lista os canais do usuário)
     
-    # Para testar o upload de todos os vídeos encontrados na pasta de output:
-    # uploader.upload_all_videos()
-    
-    # Para testar o upload de um vídeo individual:
-    # Substitua 'caminho/para/seu_video.mp4' pelo caminho real e defina título e descrição desejados.
-    # uploader.upload_single_video(os.path.join("output","minimalismo.txt.mp4"), "Título Personalizado", "Descrição Personalizada")
-    
-    last_date = uploader.get_last_scheduled_video_date()
-    if last_date:
-        print("O último vídeo agendado está marcado para:", last_date)
+    # Primeiro, testa o ambiente
+    if uploader.testar_ambiente():
+        print("Iniciando operações com o YouTubeUploader...")
+        # Descomente as linhas abaixo conforme o teste desejado:
+        # uploader.upload_all_videos()
+        # uploader.upload_single_video(os.path.join("output", "seu_video.mp4"), "Título Personalizado", "Descrição Personalizada")
+        
+        last_date = uploader.get_last_scheduled_video_date()
+        if last_date:
+            print("O último vídeo agendado está marcado para:", last_date)
+        else:
+            print("Nenhum vídeo agendado foi encontrado.")
     else:
-        print("Nenhum vídeo agendado foi encontrado.")
+        print("Verifique os erros acima e corrija antes de continuar.")

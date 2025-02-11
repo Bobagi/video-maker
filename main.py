@@ -25,6 +25,27 @@ def main():
         print(f"Erro: A pasta '${SCRIPT_PATH}' não foi encontrada.")
         sys.exit(1)
         
+    print("\n🔧 Testing environment TikTok\n")
+    if not TikTokUploader().start_browser():
+        print("\n🆘 TikTok upload test failed in `main.py`.")
+        sys.exit(1)
+    else:
+        print("\n🔧✅ TikTok test passed in `main.py`.")
+        
+    print("🔧 Testing environment Youtube\n")
+    if not YouTubeUploader().testar_ambiente():
+        print("\n🆘 YouTube upload test failed in `main.py`.")
+        sys.exit(1)
+    else:
+        print("\n🔧✅ YouTube test passed in `main.py`.")
+        
+    print("🔧 Testing environment Google Voice\n")
+    if not GoogleVoice().testar_ambiente():
+        print("\n🆘 Google voice test failed in `main.py`.")
+        sys.exit(1)
+    else:
+        print("\n🔧✅ Google Voice test passed in `main.py`.")
+        
     print("📰 Spliting scripts")
     processor = RoteiroProcessor(os.path.join("scripts", "roteiro.txt"))
     processor.processar()
@@ -43,34 +64,34 @@ def main():
 
         google_voice = GoogleVoice()
         tempo_total = google_voice.processar_roteiro(roteiro_path)
-        print(f"\n=== 🔊 Tempo total de áudio gerado: {tempo_total:.2f} segundos ===\n")
+        print(f"\n=== 🔊 Tempo total de áudio gerado: {tempo_total:.2f} segundos ===")
 
         query = find_value(roteiro_path, "SEARCH:")
         buscar_imagens = False
         tempo_total_desejado = math.ceil(tempo_total / 10) * 10
         tempo_maximo_por_video = 10
 
-        print(f"\n=== 📼 Buscando videos na Pexels: '{query}' ===\n")
+        print(f"\n=== 📼 Buscando videos na Pexels: '{query}' ===")
         contador_videos = pexels(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video)
-        print(f"\n=== 📼 Busca por videos na Pexels finalizada! ===\n")
+        print(f"\n=== 📼 Busca por videos na Pexels finalizada! ===")
         # print(f"\n=== Testando API do Pixabay com query: '{query}' ===")
         # pixabay(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video, contador_videos)
 
-        print(f"\n=== 📼 Gerando vídeo base ===\n")
+        print(f"\n=== 📼 Gerando vídeo base ===")
         videomaker = VideoMaker()
         videomaker.criar_video("downloads", os.path.join("musics", "musica.mp3"), tempo_total_desejado=tempo_total_desejado)
-        print(f"\n=== 📼 Vídeo base gerado ===\n")
+        print(f"\n=== 📼 Vídeo base gerado ===")
         
-        print(f"\n=== 📼 Gerando vídeo comvoz e texto ===\n")
+        print(f"\n=== 📼 Gerando vídeo comvoz e texto ===")
         videomaker.adicionar_texto_e_audio(os.path.join("output", "final_video.mp4"), output_file=f"{arquivo}.mp4", script_file=roteiro_path)
-        print(f"\n=== 📼 Vídeo com voz e texto gerado ===\n")
+        print(f"\n=== 📼 Vídeo com voz e texto gerado ===")
         
-        print(f"\n=== 🟦 Autenticando YouTube ===\n")
+        print(f"\n=== 🟦 Autenticando YouTube ===")
         youtube = YouTubeUploader()
         youtube.authenticate()
-        print(f"\n=== ✅ YouTube autenticado ===\n")
+        print(f"\n=== ✅ YouTube autenticado ===")
         
-        print(f"\n=== ⏲️ Buscando ultimo video agendado no YouTube ===\n")
+        print(f"\n=== ⏲️ Buscando ultimo video agendado no YouTube ===")
         last_date = youtube.get_last_scheduled_video_date()
         if last_date:
             print("📅 O último vídeo agendado está marcado para:", last_date)
@@ -85,7 +106,7 @@ def main():
         hashtags = find_value(roteiro_path, "HASHTAGS:")
         video_path = os.path.join("output", f"{arquivo}.mp4")
 
-        print(f"\n=== ⬆️ Iniciando upload para o YouTube ===\n")
+        print(f"\n=== ⬆️ Iniciando upload para o YouTube ===")
         upload_success = youtube.upload_single_video(
             video_path,
             titulo,
@@ -98,11 +119,12 @@ def main():
         else:
             print("⬆️🆘 Houve um erro no upload.")
             
-        print(f"\n=== ⬆️ Iniciando upload para o Tiktok ===\n")        
+        print(f"\n=== ⬆️ Iniciando upload para o Tiktok ===")        
         tiktok = TikTokUploader()
         description_tiktok = f"{titulo.strip()}\n{hashtags.strip()}"
             
         # next_schedule = datetime.datetime(2025, 2, 6, 18, 35)
+        print("\n🆚 description_tiktok: ", description_tiktok)
 
         sucesso_tiktok = tiktok.upload_video_to_tiktok(video_file=video_path, description=description_tiktok, scheduled_time=next_schedule)
         if sucesso_tiktok:
@@ -118,6 +140,9 @@ def main():
     for arquivo in os.listdir("output"):
         video_path = os.path.join("output", arquivo)
         shutil.move(video_path, os.path.join("output_backup", arquivo))
+        
+    print("\n🔚 Finalizado!\n")
+    os.system("shutdown /s /t 60")
     
 def find_value(arquivo, termo):
     with open(arquivo, 'r', encoding='utf-8') as f:

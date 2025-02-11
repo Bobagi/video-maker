@@ -11,8 +11,8 @@ class GoogleVoice:
         # Pegar a API Key do arquivo .env
         self.API_KEY = os.getenv("GOOGLE_API_KEY")
         # Caminhos das pastas
-        self.SCRIPT_PATH = os.path.join("scripts", "roteiro.txt") # Caminho do roteiro
-        self.OUTPUT_DIR = os.path.join("output", "audio") # Pasta onde os áudios serão salvos
+        self.SCRIPT_PATH = os.path.join("scripts", "roteiro.txt")  # Caminho do roteiro
+        self.OUTPUT_DIR = os.path.join("output", "audio")          # Pasta onde os áudios serão salvos
         os.makedirs(self.OUTPUT_DIR, exist_ok=True)
 
     def gerar_audio_google(self, texto, idioma="pt-BR", nome_voz="pt-BR-Wavenet-A", arquivo_audio="output.wav"):
@@ -89,7 +89,55 @@ class GoogleVoice:
             print(f"❌ Erro ao processar o roteiro: {e}")
             return 0  # Retornar 0 em caso de erro
 
+    def testar_ambiente(self):
+        # Verifica se a API Key está disponível
+        if not self.API_KEY:
+            print("❌ Erro: GOOGLE_API_KEY não encontrada no arquivo .env.")
+            return False
+
+        # Verifica se o arquivo de roteiro existe
+        if not os.path.exists(self.SCRIPT_PATH):
+            print(f"❌ Erro: Arquivo de roteiro não encontrado em {self.SCRIPT_PATH}.")
+            return False
+
+        # Verifica se a pasta de output é gravável
+        try:
+            teste_file = os.path.join(self.OUTPUT_DIR, "teste.txt")
+            with open(teste_file, "w") as f:
+                f.write("Teste")
+            os.remove(teste_file)
+        except Exception as e:
+            print(f"❌ Erro: Pasta de saída não é gravável: {e}")
+            return False
+
+        # Teste de síntese de áudio com um texto curto
+        print("🔄 Testando síntese de áudio com texto de teste...")
+        teste_audio = os.path.join(self.OUTPUT_DIR, "teste.wav")
+        resultado = self.gerar_audio_google("Teste de síntese de áudio", arquivo_audio=teste_audio)
+        if not resultado or not os.path.exists(resultado):
+            print("❌ Erro: Falha na síntese de áudio de teste.")
+            return False
+
+        # Tenta carregar o áudio gerado para verificar a integridade
+        try:
+            audio = AudioSegment.from_file(resultado)
+            duracao = len(audio) / 1000  # Converter milissegundos para segundos
+            print(f"✅ Teste de síntese concluído com sucesso. Duração: {duracao:.2f} segundos.")
+            # Remove o arquivo de teste
+            os.remove(resultado)
+        except Exception as e:
+            print(f"❌ Erro: Falha ao carregar o áudio de teste: {e}")
+            return False
+
+        print("✅ Todos os testes foram concluídos com sucesso.")
+        return True
+
 # Função para permitir a execução direta do script
 if __name__ == "__main__":
     google_voice = GoogleVoice()
-    google_voice.processar_roteiro()
+    # Primeiro, testar o ambiente
+    if google_voice.testar_ambiente():
+        print("Iniciando o processamento do roteiro...")
+        google_voice.processar_roteiro()
+    else:
+        print("Verifique os erros acima e corrija antes de continuar.")
