@@ -56,6 +56,7 @@ class YouTubeUploader:
         Armazena as credenciais em um arquivo (token.json) para evitar a necessidade
         de login a cada execução.
         """
+
         token_path = os.path.join(self.project_root, 'token.json')
         creds = None
 
@@ -65,36 +66,39 @@ class YouTubeUploader:
                 creds = Credentials.from_authorized_user_file(token_path, SCOPES)
             except Exception as e:
                 print("Erro ao ler o token salvo:", e)
+                creds = None  # Força nova autorização se houver problema ao ler o token
 
-        # Se não houver credenciais válidas, executa o fluxo OAuth
+        # Se não houver credenciais válidas, tenta atualizar ou força o fluxo OAuth
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 try:
                     creds.refresh(Request())
                 except Exception as e:
                     print("Erro ao atualizar as credenciais:", e)
-            else:
-                if os.path.exists(token_path):
-                    os.remove(token_path)
-                    print("Token antigo removido. Forçando nova autorização para obter refresh_token.")
-                
+                    # Se a atualização falhar, remove o token antigo e força nova autorização
+                    if os.path.exists(token_path):
+                        os.remove(token_path)
+                        print("Token antigo removido devido a falha na atualização.")
+                    creds = None
+            if not creds:
+                # Verifica se o arquivo de client_secrets existe
                 if not os.path.exists(self.client_secrets_file):
                     print("Arquivo client_secrets.json não encontrado em:", self.client_secrets_file)
                     sys.exit(1)
-    
+                
+                # Permite o transporte inseguro (útil em ambientes de teste)
                 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+                
+                # Cria o fluxo OAuth, solicitando acesso offline e forçando o consentimento
                 flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(
                     self.client_secrets_file, SCOPES)
-                # Força o consentimento e acesso offline para obter o refresh_token
-                try:
-                    creds = flow.run_console()
-                except AttributeError:
-                    print("Método run_console() não disponível, usando run_local_server()...")
-                    creds = flow.run_local_server(port=8080, access_type='offline', prompt='consent')
-            # Salva as credenciais para a próxima execução
-            with open(token_path, 'w') as token_file:
-                token_file.write(creds.to_json())
-
+                creds = flow.run_local_server(port=8080, access_type='offline', prompt='consent')
+                
+                # Salva as credenciais para a próxima execução
+                with open(token_path, 'w') as token_file:
+                    token_file.write(creds.to_json())
+        
+        # Inicializa o serviço da API do YouTube com as credenciais obtidas
         self.youtube = googleapiclient.discovery.build("youtube", "v3", credentials=creds)
         print("Autenticação realizada com sucesso!")
 
@@ -380,7 +384,9 @@ class YouTubeUploader:
 
         # Testa a autenticação e conexão com a API
         try:
+            print("Iniciando testes de autenticação e conexão com a API do YouTube...")
             self.authenticate()
+            print("✅ Autenticação realizada com sucesso.")
             self.test_connection()
         except Exception as e:
             print("❌ Erro durante autenticação ou teste de conexão:", e)
