@@ -25,6 +25,13 @@ def main():
         print(f"Erro: A pasta '${SCRIPT_PATH}' não foi encontrada.")
         sys.exit(1)
         
+    print("\n🔧 Testing environment Youtube")
+    if not YouTubeUploader().testar_ambiente():
+        print("\n🆘 YouTube upload test failed in `main.py`.")
+        sys.exit(1)
+    else:
+        print("\n🔧✅ YouTube test passed in `main.py`.")
+        
     print("\n🔧 Testing environment TikTok\n")
     if not TikTokUploader().start_browser():
         print("\n🆘 TikTok upload test failed in `main.py`.")
@@ -32,14 +39,7 @@ def main():
     else:
         print("\n🔧✅ TikTok test passed in `main.py`.")
         
-    print("🔧 Testing environment Youtube\n")
-    if not YouTubeUploader().testar_ambiente():
-        print("\n🆘 YouTube upload test failed in `main.py`.")
-        sys.exit(1)
-    else:
-        print("\n🔧✅ YouTube test passed in `main.py`.")
-        
-    print("🔧 Testing environment Google Voice\n")
+    print("\n🔧 Testing environment Google Voice")
     if not GoogleVoice().testar_ambiente():
         print("\n🆘 Google voice test failed in `main.py`.")
         sys.exit(1)
