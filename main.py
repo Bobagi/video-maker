@@ -144,9 +144,6 @@ def main():
         except Exception as e:
             print(f"Erro ao mover arquivo {arquivo} para output_backup: {e}")
             continue
-        
-    print("\n🔚 Finalizado!\n")
-    os.system("shutdown /s /t 60")
     
 def find_value(arquivo, termo):
     with open(arquivo, 'r', encoding='utf-8') as f:
@@ -261,3 +258,6 @@ def pexels(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video, 
 
 if __name__ == "__main__":
     main()
+    
+    print("\n🔚 Finalizado!\n")
+    # os.system("shutdown /s /t 60")

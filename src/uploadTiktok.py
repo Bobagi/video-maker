@@ -85,29 +85,43 @@ class TikTokUploader:
         print("Aguardando o processamento do upload...")
         time.sleep(15)
 
+        max_attempts = 50
+        attempt = 0
+
         # 3. Insere a descrição
-        try:
-            desc_field = WebDriverWait(self.driver, 30).until(
-                EC.presence_of_element_located((By.XPATH, "//div[@data-e2e='caption_container']//div[@contenteditable='true']"))
-            )
-            self.driver.execute_script("arguments[0].innerText = '';", desc_field)
-            self.driver.execute_script("arguments[0].innerText = arguments[1];", desc_field, description)
-            print("Descrição inserida.")
-        except Exception as e:
-            print("Erro ao inserir descrição:", e)
-            return False
-        
-        time.sleep(5)
-        # 3.1. Insere a descrição novamente
-        try:
-            desc_field = WebDriverWait(self.driver, 30).until(
-                EC.presence_of_element_located((By.XPATH, "//div[@data-e2e='caption_container']//div[@contenteditable='true']"))
-            )
-            self.driver.execute_script("arguments[0].innerText = '';", desc_field)
-            self.driver.execute_script("arguments[0].innerText = arguments[1];", desc_field, description)
-            print("Descrição inserida.")
-        except Exception as e:
-            print("Erro ao inserir descrição:", e)
+        while attempt < max_attempts:
+            try:
+                # Aguarda e seleciona o campo de descrição
+                desc_field = WebDriverWait(self.driver, 30).until(
+                    EC.presence_of_element_located(
+                        (By.XPATH, "//div[@data-e2e='caption_container']//div[@contenteditable='true']")
+                    )
+                )
+
+                # Limpa o campo e insere a descrição
+                self.driver.execute_script("arguments[0].innerText = '';", desc_field)
+                self.driver.execute_script("arguments[0].innerText = arguments[1];", desc_field, description)
+                print(f"Tentativa {attempt + 1}: descrição inserida, aguardando atualização...")
+
+                # Aguarda um curto período para o campo atualizar (ajuste conforme necessário)
+                time.sleep(2)
+
+                # Recupera o valor atual do campo para verificação
+                current_text = self.driver.execute_script("return arguments[0].innerText;", desc_field)
+
+                # Verifica se o texto corresponde (removendo espaços extras)
+                if current_text.strip() == description.strip():
+                    print("Descrição inserida corretamente.")
+                    break  # Sai do loop se a verificação for bem-sucedida
+                else:
+                    print(f"Texto não conferido na tentativa {attempt + 1}. Tentando novamente...")
+            except Exception as e:
+                print("Erro ao inserir descrição na tentativa", attempt + 1, ":", e)
+            
+            attempt += 1
+
+        if attempt == max_attempts:
+            print("Falha ao inserir a descrição corretamente após várias tentativas.")
             return False
 
         # 4. Seleciona o radiobutton "Programação"
