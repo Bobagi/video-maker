@@ -138,8 +138,12 @@ def main():
         
     # Move videos from outout to output_backup
     for arquivo in os.listdir("output"):
-        video_path = os.path.join("output", arquivo)
-        shutil.move(video_path, os.path.join("output_backup", arquivo))
+        try:
+            video_path = os.path.join("output", arquivo)
+            shutil.move(video_path, os.path.join("output_backup", arquivo))
+        except Exception as e:
+            print(f"Erro ao mover arquivo {arquivo} para output_backup: {e}")
+            continue
         
     print("\n🔚 Finalizado!\n")
     os.system("shutdown /s /t 60")

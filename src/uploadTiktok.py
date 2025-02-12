@@ -96,6 +96,19 @@ class TikTokUploader:
         except Exception as e:
             print("Erro ao inserir descrição:", e)
             return False
+        
+        time.sleep(5)
+        # 3.1. Insere a descrição novamente
+        try:
+            desc_field = WebDriverWait(self.driver, 30).until(
+                EC.presence_of_element_located((By.XPATH, "//div[@data-e2e='caption_container']//div[@contenteditable='true']"))
+            )
+            self.driver.execute_script("arguments[0].innerText = '';", desc_field)
+            self.driver.execute_script("arguments[0].innerText = arguments[1];", desc_field, description)
+            print("Descrição inserida.")
+        except Exception as e:
+            print("Erro ao inserir descrição:", e)
+            return False
 
         # 4. Seleciona o radiobutton "Programação"
         try:
