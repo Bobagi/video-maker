@@ -31,6 +31,13 @@ class TikTokUploader:
         self.headless = headless
         self.driver = None
 
+    def start_browser_test(self):
+        result = self.start_browser()
+        if result:
+            self.close_browser()
+
+        return result
+
     def start_browser(self):
         """Inicia o navegador usando o perfil logado."""
         try:
@@ -120,19 +127,28 @@ class TikTokUploader:
             
             attempt += 1
 
-        if attempt == max_attempts:
+        if attempt >= max_attempts:
             print("Falha ao inserir a descrição corretamente após várias tentativas.")
             return False
 
         # 4. Seleciona o radiobutton "Programação"
         try:
-            radio_prog = WebDriverWait(self.driver, 30).until(
-                EC.element_to_be_clickable((By.XPATH, "//label[contains(., 'Programação')]"))
-            )
-            radio_prog.click()
-            print("Radiobutton 'Programação' selecionado.")
+            # Tenta encontrar o botão com o texto "Programação"
+            try:
+                radio_prog = WebDriverWait(self.driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, "//label[contains(., 'Programação')]"))
+                )
+                radio_prog.click()
+                print("Radiobutton 'Programação' selecionado.")
+            except:
+                # Se não encontrar, tenta com o texto "Schedule"
+                radio_prog = WebDriverWait(self.driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, "//label[contains(., 'Schedule')]"))
+                )
+                radio_prog.click()
+                print("Radiobutton 'Schedule' selecionado.")
         except Exception as e:
-            print("Erro ao selecionar o radiobutton 'Programação':", e)
+            print("Erro ao selecionar o radiobutton:", e)
             return False
 
         # 5. Configuração de data e hora (caso agendamento seja solicitado)
@@ -222,13 +238,22 @@ class TikTokUploader:
 
         # 6. Clica no botão "Programação" para finalizar o upload agendado
         try:
-            prog_button = WebDriverWait(self.driver, 30).until(
-                EC.element_to_be_clickable((By.XPATH, "//button[normalize-space()='Programação']"))
-            )
-            prog_button.click()
-            print("Botão 'Programação' clicado. Upload agendado!")
+            # Tenta encontrar e clicar no botão com o texto "Programação"
+            try:
+                prog_button = WebDriverWait(self.driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, "//button[normalize-space()='Programação']"))
+                )
+                prog_button.click()
+                print("Botão 'Programação' clicado. Upload agendado!")
+            except:
+                # Se não encontrar, tenta com o texto "Schedule"
+                prog_button = WebDriverWait(self.driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, "//button[normalize-space()='Schedule']"))
+                )
+                prog_button.click()
+                print("Botão 'Schedule' clicado. Upload agendado!")
         except Exception as e:
-            print("Erro ao clicar no botão 'Programação':", e)
+            print("Erro ao clicar no botão:", e)
             return False
 
         # 7. Aguarda a confirmação final do processo

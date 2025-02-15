@@ -33,7 +33,7 @@ def main():
         print("\n🔧✅ YouTube test passed in `main.py`.")
         
     print("\n🔧 Testing TikTok environment\n")
-    if not TikTokUploader().start_browser():
+    if not TikTokUploader().start_browser_test():
         print("\n🆘 TikTok upload test failed in `main.py`.")
         sys.exit(1)
     else:
@@ -50,11 +50,15 @@ def main():
     processor = RoteiroProcessor(os.path.join("scripts", "roteiro.txt"))
     processor.processar()
     processor.exportar("scripts")
-    processor.deletar_arquivo_original()
+    # processor.deletar_arquivo_original()
     print("📰 Scripts processed\n")
 
     print("📹 Starting video generation\n\n")
     for arquivo in os.listdir(SCRIPT_PATH):
+        if arquivo == "roteiro.txt":
+            continue
+
+        print(f"\nGenerating video for {arquivo}")
         roteiro_path = os.path.join(SCRIPT_PATH, arquivo)
 
         if not os.path.isfile(roteiro_path):
