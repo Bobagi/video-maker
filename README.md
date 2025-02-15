@@ -10,6 +10,8 @@ Este projeto tem como objetivo automatizar a criação e o upload de vídeos par
   - Google Text-to-Speech (utilizado em `googleVoice.py`)
 - **Outras Dependências:**  
   - [ImageMagick](https://imagemagick.org/script/download.php) (necessário para o processamento de imagens e vídeos)
+  - [ChromeDriver](https://googlechromelabs.github.io/chrome-for-testing/#stable) (Stable 133.0.6943.98)
+  - [FFmpeg](https://ffmpeg.org/download.html) (Put it in yout PATH)
 
 ## Configuração do Ambiente
 
@@ -28,12 +30,18 @@ Para ativar o ambiente:
 - **Windows:**
   
       source venv/Scripts/activate
+    or
+      .\venv\Scripts\Activate
 
 Para desativar o ambiente, basta executar:
 
     deactivate
 
 ### 2. Instalando as Dependências
+
+Atualize o `pip`:
+
+    python -m pip install --upgrade --force-reinstall pip
 
 Instale os pacotes necessários com:
 

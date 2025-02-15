@@ -22,82 +22,82 @@ SCRIPT_PATH = os.getenv("SCRIPT_PATH", "scripts")
 def main():
     
     if not os.path.exists(SCRIPT_PATH):
-        print(f"Erro: A pasta '${SCRIPT_PATH}' não foi encontrada.")
+        print(f"Error: The folder '${SCRIPT_PATH}' was not found.")
         sys.exit(1)
         
-    print("\n🔧 Testing environment Youtube")
+    print("\n🔧 Testing YouTube environment")
     if not YouTubeUploader().testar_ambiente():
         print("\n🆘 YouTube upload test failed in `main.py`.")
         sys.exit(1)
     else:
         print("\n🔧✅ YouTube test passed in `main.py`.")
         
-    print("\n🔧 Testing environment TikTok\n")
+    print("\n🔧 Testing TikTok environment\n")
     if not TikTokUploader().start_browser():
         print("\n🆘 TikTok upload test failed in `main.py`.")
         sys.exit(1)
     else:
         print("\n🔧✅ TikTok test passed in `main.py`.")
         
-    print("\n🔧 Testing environment Google Voice")
+    print("\n🔧 Testing Google Voice environment")
     if not GoogleVoice().testar_ambiente():
-        print("\n🆘 Google voice test failed in `main.py`.")
+        print("\n🆘 Google Voice test failed in `main.py`.")
         sys.exit(1)
     else:
         print("\n🔧✅ Google Voice test passed in `main.py`.")
         
-    print("📰 Spliting scripts")
+    print("📰 Splitting scripts")
     processor = RoteiroProcessor(os.path.join("scripts", "roteiro.txt"))
     processor.processar()
     processor.exportar("scripts")
     processor.deletar_arquivo_original()
-    print("📰 Scripts done\n")
+    print("📰 Scripts processed\n")
 
-    print("📹 Starting video generating\n\n")
+    print("📹 Starting video generation\n\n")
     for arquivo in os.listdir(SCRIPT_PATH):
         roteiro_path = os.path.join(SCRIPT_PATH, arquivo)
 
         if not os.path.isfile(roteiro_path):
             continue
 
-        print(f"\n=== 🔊 Gerando audios para o arquivo: {arquivo} ===")
+        print(f"\n=== 🔊 Generating audio for file: {arquivo} ===")
 
         google_voice = GoogleVoice()
         tempo_total = google_voice.processar_roteiro(roteiro_path)
-        print(f"\n=== 🔊 Tempo total de áudio gerado: {tempo_total:.2f} segundos ===")
+        print(f"\n=== 🔊 Total audio generated: {tempo_total:.2f} seconds ===")
 
         query = find_value(roteiro_path, "SEARCH:")
         buscar_imagens = False
         tempo_total_desejado = math.ceil(tempo_total / 10) * 10
         tempo_maximo_por_video = 10
 
-        print(f"\n=== 📼 Buscando videos na Pexels: '{query}' ===")
+        print(f"\n=== 📼 Searching videos on Pexels: '{query}' ===")
         contador_videos = pexels(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video)
-        print(f"\n=== 📼 Busca por videos na Pexels finalizada! ===")
-        # print(f"\n=== Testando API do Pixabay com query: '{query}' ===")
+        print(f"\n=== 📼 Pexels video search completed! ===")
+        # print(f"\n=== Testing Pixabay API with query: '{query}' ===")
         # pixabay(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video, contador_videos)
 
-        print(f"\n=== 📼 Gerando vídeo base ===")
+        print(f"\n=== 📼 Generating base video ===")
         videomaker = VideoMaker()
         videomaker.criar_video("downloads", os.path.join("musics", "musica.mp3"), tempo_total_desejado=tempo_total_desejado)
-        print(f"\n=== 📼 Vídeo base gerado ===")
+        print(f"\n=== 📼 Base video generated ===")
         
-        print(f"\n=== 📼 Gerando vídeo comvoz e texto ===")
+        print(f"\n=== 📼 Generating video with voice and text ===")
         videomaker.adicionar_texto_e_audio(os.path.join("output", "final_video.mp4"), output_file=f"{arquivo}.mp4", script_file=roteiro_path)
-        print(f"\n=== 📼 Vídeo com voz e texto gerado ===")
+        print(f"\n=== 📼 Video with voice and text generated ===")
         
-        print(f"\n=== 🟦 Autenticando YouTube ===")
+        print(f"\n=== 🟦 Authenticating YouTube ===")
         youtube = YouTubeUploader()
         youtube.authenticate()
-        print(f"\n=== ✅ YouTube autenticado ===")
+        print(f"\n=== ✅ YouTube authenticated ===")
         
-        print(f"\n=== ⏲️ Buscando ultimo video agendado no YouTube ===")
+        print(f"\n=== ⏲️ Fetching last scheduled video on YouTube ===")
         last_date = youtube.get_last_scheduled_video_date()
         if last_date:
-            print("📅 O último vídeo agendado está marcado para:", last_date)
+            print("📅 The last scheduled video is set for:", last_date)
             base_time = last_date + datetime.timedelta(seconds=1)
         else:
-            print("📅 Nenhum vídeo agendado foi encontrado.")
+            print("📅 No scheduled videos found.")
             base_time = None 
             
         next_schedule = youtube.generate_schedule(1, start_time=base_time)[0]
@@ -106,43 +106,43 @@ def main():
         hashtags = find_value(roteiro_path, "HASHTAGS:")
         video_path = os.path.join("output", f"{arquivo}.mp4")
 
-        print(f"\n=== ⬆️ Iniciando upload para o YouTube ===")
+        print(f"\n=== ⬆️ Starting YouTube upload ===")
         upload_success = youtube.upload_single_video(
             video_path,
             titulo,
             hashtags,
-            scheduled_time=next_schedule  # Passa o horário calculado
+            scheduled_time=next_schedule  # Pass the calculated time
         )
         
         if upload_success:
-            print("⬆️✅ Upload realizado com sucesso no YouTube!")
+            print("⬆️✅ Upload successful on YouTube!")
         else:
-            print("⬆️🆘 Houve um erro no upload.")
+            print("⬆️🆘 Upload failed.")
             
-        print(f"\n=== ⬆️ Iniciando upload para o Tiktok ===")        
+        print(f"\n=== ⬆️ Starting TikTok upload ===")        
         tiktok = TikTokUploader()
         description_tiktok = f"{titulo.strip()}\n{hashtags.strip()}"
             
         # next_schedule = datetime.datetime(2025, 2, 6, 18, 35)
-        print("\n🆚 description_tiktok: ", description_tiktok)
+        print("\n🆚 TikTok description: ", description_tiktok)
 
         sucesso_tiktok = tiktok.upload_video_to_tiktok(video_file=video_path, description=description_tiktok, scheduled_time=next_schedule)
         if sucesso_tiktok:
-            print("⬆️✅ Upload agendado com sucesso no TikTok!")
+            print("⬆️✅ Upload scheduled successfully on TikTok!")
         else:
-            print("⬆️🆘 Falha no upload.")
+            print("⬆️🆘 Upload failed.")
             
         SCRIPT_BACKUP_PATH = "script_backup"
         os.makedirs(SCRIPT_BACKUP_PATH, exist_ok=True)
         shutil.move(roteiro_path, os.path.join(SCRIPT_BACKUP_PATH, arquivo))
         
-    # Move videos from outout to output_backup
+    # Move videos from output to output_backup
     for arquivo in os.listdir("output"):
         try:
             video_path = os.path.join("output", arquivo)
             shutil.move(video_path, os.path.join("output_backup", arquivo))
         except Exception as e:
-            print(f"Erro ao mover arquivo {arquivo} para output_backup: {e}")
+            print(f"Error moving file {arquivo} to output_backup: {e}")
             continue
     
 def find_value(arquivo, termo):
@@ -155,50 +155,50 @@ def find_value(arquivo, termo):
 def pixabay(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video, contador_videos=0):
     pixabay = PixabayAPI(PIXABAY_API_KEY)
     
-    # Buscar imagens, se necessário
+    # Search for images if necessary
     if buscar_imagens:
         imagens = pixabay.buscar_imagens(query, num=3, orientation="vertical")
-        print("Imagens Encontradas no Pixabay:")
+        print("Images Found on Pixabay:")
         for img in imagens:
             print(f"URL: {img['pageURL']}, Tags: {img['tags']}")
         
-        # Criar pasta de downloads, se não existir
+        # Create downloads folder if it doesn't exist
         os.makedirs(DOWNLOAD_DIR, exist_ok=True)
             
-        # Baixar imagens
-        print("\nDownload das imagens encontradas:")
+        # Download images
+        print("\nDownloading found images:")
         for i, img in enumerate(imagens):
-            url = img['largeImageURL']  # Link direto para o arquivo de imagem
+            url = img['largeImageURL']  # Direct link to the image file
             destino = os.path.join(DOWNLOAD_DIR, f"imagem_{i+1}.jpg")
             pixabay.baixar_arquivo(url, destino)
 
-    # Buscar vídeos
-    videos = pixabay.buscar_videos(query, num=50)  # Buscar até 50 vídeos para garantir tempo suficiente
-    print("\nVídeos Encontrados no Pixabay:")
+    # Search for videos
+    videos = pixabay.buscar_videos(query, num=50)  # Search up to 50 videos to ensure enough time
+    print("\nVideos Found on Pixabay:")
     tempo_acumulado = 0
 
     for vid in videos:
         if tempo_acumulado >= tempo_total_desejado:
-            print("Tempo total desejado alcançado para pixabay.")
-            break  # Interrompe se já alcançamos o tempo desejado
+            print("Desired total time reached for Pixabay.")
+            break  # Stop if we've reached the desired time
         
         duracao = vid['duration']
         if duracao > 200:
-            continue  # Ignorar vídeos muito longos
+            continue  # Ignore very long videos
         
         if duracao > tempo_maximo_por_video:
-            duracao = tempo_maximo_por_video  # Limitar o tempo máximo por vídeo
+            duracao = tempo_maximo_por_video  # Limit the maximum time per video
 
         tempo_acumulado += duracao
         contador_videos += 1
-        print(f"URL: {vid['pageURL']}, Duração: {vid['duration']} segundos, Considerado: {duracao} segundos")
+        print(f"URL: {vid['pageURL']}, Duration: {vid['duration']} seconds, Considered: {duracao} seconds")
 
-        # Criar pasta de downloads, se não existir
+        # Create downloads folder if it doesn't exist
         os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-        # Baixar vídeo
-        print("\nDownload do vídeo encontrado:")
-        url = vid['videos']['medium']['url']  # Link direto para o arquivo de vídeo
+        # Download video
+        print("\nDownloading found video:")
+        url = vid['videos']['medium']['url']  # Direct link to the video file
         destino = os.path.join(DOWNLOAD_DIR, f"video_{contador_videos}.mp4")
         pixabay.baixar_arquivo(url, destino)
         
@@ -208,49 +208,49 @@ def pixabay(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video,
 def pexels(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video, contador_videos=0):
     pexels = PexelsAPI(PEXELS_API_KEY)
     
-    # Buscar imagens, se necessário
+    # Search for images if necessary
     if buscar_imagens:
         imagens = pexels.buscar_imagens(query, num=3)
-        print("Imagens Encontradas no Pexels:")
+        print("Images Found on Pexels:")
         for img in imagens:
-            print(f"URL: {img['url']}, Fotógrafo: {img['photographer']}")
+            print(f"URL: {img['url']}, Photographer: {img['photographer']}")
         
-        # Criar pasta de downloads, se não existir
+        # Create downloads folder if it doesn't exist
         os.makedirs(DOWNLOAD_DIR, exist_ok=True)
             
-        # Baixar imagens
-        print("\nDownload das imagens encontradas:")
+        # Download images
+        print("\nDownloading found images:")
         for i, img in enumerate(imagens):
-            url = img['src']['original']  # Link direto para o arquivo de imagem
+            url = img['src']['original']  # Direct link to the image file
             destino = os.path.join(DOWNLOAD_DIR, f"imagem_{i+1}.jpg")
             pexels.baixar_arquivo(url, destino)
 
-    # Buscar vídeos
-    videos = pexels.buscar_videos(query, num=50, orientation="portrait")  # Buscar até 50 vídeos para garantir tempo suficiente
+    # Search for videos
+    videos = pexels.buscar_videos(query, num=50, orientation="portrait")  # Search up to 50 videos to ensure enough time
     tempo_acumulado = 0
 
     for vid in videos:
         if tempo_acumulado >= tempo_total_desejado:
-            print("Tempo total desejado alcançado para pexels.")
-            break  # Interrompe se já alcançamos o tempo desejado
+            print("Desired total time reached for Pexels.")
+            break  # Stop if we've reached the desired time
         
         duracao = vid['duration']
         if duracao > 200:
-            continue  # Ignorar vídeos muito longos
+            continue  # Ignore very long videos
         
         if duracao > tempo_maximo_por_video:
-            duracao = tempo_maximo_por_video  # Limitar o tempo máximo por vídeo
+            duracao = tempo_maximo_por_video  # Limit the maximum time per video
 
         tempo_acumulado += duracao
         contador_videos += 1
-        print(f"URL: {vid['url']}, Duração: {vid['duration']} segundos, Considerado: {duracao} segundos")
+        print(f"URL: {vid['url']}, Duration: {vid['duration']} seconds, Considered: {duracao} seconds")
 
-        # Criar pasta de downloads, se não existir
+        # Create downloads folder if it doesn't exist
         os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-        # Baixar vídeo
-        print("\nDownload do vídeo encontrado:")
-        url = vid['video_files'][0]['link']  # Link direto para o arquivo de vídeo
+        # Download video
+        print("\nDownloading found video:")
+        url = vid['video_files'][0]['link']  # Direct link to the video file
         destino = os.path.join(DOWNLOAD_DIR, f"video_{contador_videos}.mp4")
         pexels.baixar_arquivo(url, destino)
         
@@ -259,5 +259,5 @@ def pexels(query, buscar_imagens, tempo_total_desejado, tempo_maximo_por_video, 
 if __name__ == "__main__":
     main()
     
-    print("\n🔚 Finalizado!\n")
+    print("\n🔚 Finished!\n")
     # os.system("shutdown /s /t 60")
