@@ -46,7 +46,7 @@ def main():
     else:
         print("\n🔧✅ Google Voice test passed in `main.py`.")
         
-    print("📰 Splitting scripts")
+    print("\n📰 Splitting scripts")
     processor = RoteiroProcessor(os.path.join("scripts", "roteiro.txt"))
     processor.processar()
     processor.exportar("scripts")

@@ -10,24 +10,14 @@ class RoteiroProcessor:
         """Método principal para executar todo o processamento"""
         conteudo = self._ler_arquivo()
         self.roteiros = self._dividir_roteiros(conteudo)
-        
-    def exportar(self, output_dir='scripts'):
-        """
-        Exporta os roteiros para arquivos individuais
-        :param output_dir: Diretório de saída (padrão: scripts)
-        """
-        os.makedirs(output_dir, exist_ok=True)
-        for roteiro in self.roteiros:
-            nome_arquivo = self._gerar_nome_arquivo(roteiro)
-            caminho_completo = os.path.join(output_dir, nome_arquivo)
-            with open(caminho_completo, 'w', encoding='utf-8') as arquivo:
-                print(f"Roteiro criado: {caminho_completo}")
-                arquivo.write(roteiro)
                 
     def _ler_arquivo(self):
-        """Lê o conteúdo do arquivo de entrada"""
+        """Lê o conteúdo do arquivo de entrada, removendo asteriscos"""
         with open(self.input_path, 'r', encoding='utf-8') as arquivo:
-            return arquivo.read()
+            conteudo = arquivo.read()
+            # Remove todos os asteriscos do conteúdo
+            conteudo_sem_asteriscos = conteudo.replace('*', '')
+            return conteudo_sem_asteriscos
             
     def _dividir_roteiros(self, conteudo):
         """Divide o conteúdo em roteiros individuais baseado em 'TEMA:'"""
@@ -71,6 +61,19 @@ class RoteiroProcessor:
         """Remove acentos e caracteres especiais"""
         texto_normalizado = unicodedata.normalize('NFKD', texto)
         return ''.join(c for c in texto_normalizado if not unicodedata.combining(c))
+    
+    def exportar(self, output_dir='scripts'):
+        """
+        Exporta os roteiros para arquivos individuais
+        :param output_dir: Diretório de saída (padrão: scripts)
+        """
+        os.makedirs(output_dir, exist_ok=True)
+        for roteiro in self.roteiros:
+            nome_arquivo = self._gerar_nome_arquivo(roteiro)
+            caminho_completo = os.path.join(output_dir, nome_arquivo)
+            with open(caminho_completo, 'w', encoding='utf-8') as arquivo:
+                print(f"Roteiro criado: {caminho_completo}")
+                arquivo.write(roteiro)
 
     def deletar_arquivo_original(self):
         """Remove o arquivo fonte original após o processamento"""
